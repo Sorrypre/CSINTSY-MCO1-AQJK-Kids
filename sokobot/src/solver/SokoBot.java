@@ -14,8 +14,16 @@ public class SokoBot {
 				throw new IllegalArgumentException("mapData or itemsData cannot be null");
 			this.width = width;
 			this.height = height;
-			this.mapData = mapData;
-			this.itemsData = itemsData;
+			
+			this.mapData = new Character[mapData.length][];
+			for (int i = 0; i < mapData.length; i++)
+				for (int j = 0; i < mapData[i].length; j++)
+					this.mapData[i][j] = mapData[i][j];
+			
+			this.itemsData = new Character[itemsData.length][];
+			for (int i = 0; i < itemsData.length; i++)
+				for (int j = 0; j < itemsData[i].length; j++)
+					this.itemsData[i][j] = itemsData[i][j];
 		}
 		
 		public String get()
@@ -30,7 +38,7 @@ public class SokoBot {
 		
 		private Boolean[] Actions(Character[][] currentItemsData)
 		{
-			Boolean[] a = new Boolean[4] { false, false, false, false };
+			Boolean[] a = new Boolean[4];
 			if (!isDeadlock(currentItemsData))
 			{
 				// IMPORTANT!!
@@ -67,19 +75,23 @@ public class SokoBot {
 			else return currentItemsData;
 		}
 		
-		private boolean isDeadlock(char[][] currentState)
+		private boolean isDeadlock(Character[][] currentState)
 		{
+			boolean result = false;
 			// Conditions for deadlock:
 			// - One of the boxes reach a non-target corner of a map
 			// - ?
 			// - ?
+			return result;
 		}
 		
-		private boolean isSolution(char[][] currentState)
+		private boolean isSolution(Character[][] currentState)
 		{
+			boolean result = false;
 			// Check if the given state is the solution for the puzzle
 			//
 			//
+			return result;
 		}
 		
 		Integer width, height;
