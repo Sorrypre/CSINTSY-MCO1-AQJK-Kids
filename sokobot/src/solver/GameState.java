@@ -40,7 +40,7 @@ public class GameState {
 	public boolean isAnyBoxCornered(Character[][] map) {
 		// Iterate through itemsMap
 		Character[] vicinity;
-		for (Map.Entry<Position, Character> entry : boxpos) {
+		for (Map.Entry<Position, Character> entry : itemsMap.entrySet()) {
 			// Deadlock only happens when the box is not on a goal tile
 			if (entry.getValue() == '$' && map[entry.getKey().getRow()][entry.getKey().getCol()] != '.') {
 				// Get map characters on the box's vicinity as follows:
