@@ -76,6 +76,10 @@ public class SokoBot {
 			else return currentItemsData;
 		}
 		
+		/* Moved function to the GameState class
+		// But the question is, need na rin ba nating ichange ung mga params dito
+		// from Character[][] into GameState?
+		
 		private boolean isDeadlock(Character[][] currentState)
 		{
 			boolean result = false;
@@ -102,25 +106,26 @@ public class SokoBot {
 			// Conditions for deadlock:
 
             // CASE 1: WALL-WALL CORNER DEADLOCK
-            /*
-             *  XXX
-             *  XO
-             *  X
-             */
+            //
+            //  XXX
+            //  XO
+            //  X
+            //
             // CASE 2: WALL-BOX CORNER DEADLOCK
-            /*
-             *  X O
-             *  X O
-             *  X
-             */
+            //
+            //  X O
+            //  X O
+            //  X
+            //
             // CASE 3: BOX-BOX CORNER DEADLOCK
-            /*
-             *    O
-             *  O O
-             */
+            //
+            //    O
+            //  O O
+            //
 
 			return result;
 		}
+		*/
 		
 		private boolean isSolution(Character[][] currentState)
 		{
