@@ -1,6 +1,6 @@
 package solver;
 
-public class SokoBot {
+public class SokoBotOld {
 
   public String solveSokobanPuzzle(int width, int height, char[][] mapData, char[][] itemsData) {
     /*

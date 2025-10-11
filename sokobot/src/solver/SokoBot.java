@@ -1,5 +1,6 @@
 package solver;
 import java.util.Queue;
+
 public class SokoBot {
 
 	public String solveSokobanPuzzle(int width, int height, char[][] mapData, char[][] itemsData) {
@@ -14,7 +15,7 @@ public class SokoBot {
 				throw new IllegalArgumentException("mapData or itemsData cannot be null");
 			this.width = width;
 			this.height = height;
-			
+
 			this.mapData = new Character[mapData.length][];
 			for (int i = 0; i < mapData.length; i++)
 				for (int j = 0; i < mapData[i].length; j++)
@@ -78,10 +79,46 @@ public class SokoBot {
 		private boolean isDeadlock(Character[][] currentState)
 		{
 			boolean result = false;
+            // find each box in the current state
+            int row, col;
+            for (row = 0; row < width; row++) {
+                for (col = 0; col < height; col++) {
+                    //get the position of each box in the state
+                    //before checking for deadlock, make sure box is not in the goal
+                    //In this implementation, the cases will be checked together in one conditional
+                    // Only one deadlock must be found for this function to return true
+                    if (currentState[row][col] == '$' && mapData[row][col] != '.') {
+                        //Case 1.1: WALL-WALL DEADLOCK (top-left corner)
+                        if (mapData[row - 1][col] == '#' && mapData[row][col - 1] == '#') {
+                            result = true;
+                            break;
+                        }
+
+                    }
+                }
+            }
+            // for each box found,
+            // check if the box is in a deadlock position
 			// Conditions for deadlock:
-			// - One of the boxes reach a non-target corner of a map
-			// - ?
-			// - ?
+
+            // CASE 1: WALL-WALL CORNER DEADLOCK
+            /*
+             *  XXX
+             *  XO
+             *  X
+             */
+            // CASE 2: WALL-BOX CORNER DEADLOCK
+            /*
+             *  X O
+             *  X O
+             *  X
+             */
+            // CASE 3: BOX-BOX CORNER DEADLOCK
+            /*
+             *    O
+             *  O O
+             */
+
 			return result;
 		}
 		
