@@ -4,27 +4,37 @@ import java.util.Queue;
 public class SokoBot {
 
 	public String solveSokobanPuzzle(int width, int height, char[][] mapData, char[][] itemsData) {
-		return new SokoBotSequence(width, height, mapData, itemsData).get();
+		return new SokoBotSequence(mapData, itemsData).get();
 	}
 	
 	private class SokoBotSequence
 	{
-		public SokoBotSequence(int width, int height, char[][] mapData, char[][] itemsData)
+		public SokoBotSequence(char[][] mapData, char[][] itemsData)
 		{
 			if (null == mapData || null == itemsData)
 				throw new IllegalArgumentException("mapData or itemsData cannot be null");
-			this.width = width;
-			this.height = height;
-
+			
+			Character[][] items;
+			this.boxes = 0;
 			this.mapData = new Character[mapData.length][];
 			for (int i = 0; i < mapData.length; i++)
+			{
 				for (int j = 0; i < mapData[i].length; j++)
+				{
 					this.mapData[i][j] = mapData[i][j];
+					if ('.' == mapData[i][j])
+						this.boxes++;
+				}
+			}
+			if (0 == boxes)
+				throw new NullPointerException("There are no boxes found in this game level");
 			
-			this.itemsData = new Character[itemsData.length][];
+			items = new Character[itemsData.length][];
 			for (int i = 0; i < itemsData.length; i++)
 				for (int j = 0; j < itemsData[i].length; j++)
-					this.itemsData[i][j] = itemsData[i][j];
+					items[i][j] = itemsData[i][j];
+			
+			this.itemsData = new GameState(items);
 		}
 		
 		public String get()
@@ -37,10 +47,10 @@ public class SokoBot {
 		
 		private SokoBotSequence() {}
 		
-		private Boolean[] Actions(Character[][] currentItemsData)
+		private Boolean[] Actions(GameState currentItemsData)
 		{
 			Boolean[] a = new Boolean[4];
-			if (!isDeadlock(currentItemsData))
+			if (!currentItemsData.isAnyBoxCornered(mapData))
 			{
 				// IMPORTANT!!
 				// The array of moves will follow the order: up, down, left, right.
@@ -56,88 +66,67 @@ public class SokoBot {
 			return a;
 		}
 		
-		private Character[][] Succ(Character[][] currentItemsData, char action)
+		private GameState Succ(GameState currentItemsData, char action)
 		{
-			Character[][] s;
-			if (!isDeadlock(currentItemsData))
+			Object[] vicinityData;
+			Character objInner, objOuter;
+			Position objPosInner, objPosOuter, playerPos;
+			GameState succ;
+			int move;
+			if (!currentItemsData.isAnyBoxCornered(mapData))
 			{
-				// Get a copy of the currentState
-				s = new Character[width][height];
-				for (int i = 0; i < currentItemsData.length; i++)
-					System.arraycopy(currentItemsData[i], 0, s[i], 0, currentItemsData[i].length);
-				
-				// Update state with action here
-				//
-				//
-				
+				// Clone the data so the parameter would not be overwritten
+				succ = currentItemsData.getCopy(mapData);
+				playerPos = currentItemsData.getPlayerPos();
+				// Represent the index based on the chosen action
+				move =
+					'u' == action ? 0 :
+					'd' == action ? 4 :
+					'l' == action ? 8 : 12;
+				// Get respective vicinity data based on the action
+				vicinityData = succ.getPlayerVicinityData();
+				objPosInner = (Position)vicinityData[move + 0];
+				objInner = (Character)vicinityData[move + 1];
+				objPosOuter = (Position)vicinityData[move + 2];
+				objOuter = (Character)vicinityData[move + 3];
+				// Make sure player is not towards a wall
+				if (mapData[objPosInner.getRow()][objPosInner.getCol()] != '#')
+				{
+					// If player is towards a box, verify if it's clear for pushing by checking if there is
+					// no wall nor another box behind it
+					if ('$' == objInner && '#' != mapData[objPosOuter.getRow()][objPosOuter.getCol()] &&
+						' ' == objOuter)
+					{
+						// Player is clear for pushing the box
+						succ.setItem(objPosInner.getRow(), objPosInner.getCol(), '@');
+						succ.setItem(objPosOuter.getRow(), objPosOuter.getCol(), '$');
+						// Make sure to remove the last position of the player from the HashMap
+						succ.removeItem(playerPos.getRow(), playerPos.getCol());
+					}
+					// If the player is not towards a box whilst assuming player is not towards a wall as
+					// made sure by the outer if-block, then the player is towards a vacant tile and is free
+					// to move towards that way
+					else if ('$' != objInner)
+					{
+						// Player is clear for moving
+						succ.setItem(objPosInner.getRow(), objPosInner.getCol(), '@');
+						// Make sure to remove the last position of the player from the HashMap
+						succ.removeItem(playerPos.getRow(), playerPos.getCol());
+					}
+					// If none of these conditions fit, the player must be pushing a box with a
+					// wall or another box behind it, so the player cannot move, i.e. do nothing
+					else;
+				}
 				// Return resulting succeeding state
-				return s;
+				return succ;
 			}
-			else return currentItemsData;
+			// The state is deadlocked, the algorithm should not proceed further
+			else return null;
 		}
 		
-		/* Moved function to the GameState class
-		// But the question is, need na rin ba nating ichange ung mga params dito
-		// from Character[][] into GameState?
-		
-		private boolean isDeadlock(Character[][] currentState)
-		{
-			boolean result = false;
-            // find each box in the current state
-            int row, col;
-            for (row = 0; row < width; row++) {
-                for (col = 0; col < height; col++) {
-                    //get the position of each box in the state
-                    //before checking for deadlock, make sure box is not in the goal
-                    //In this implementation, the cases will be checked together in one conditional
-                    // Only one deadlock must be found for this function to return true
-                    if (currentState[row][col] == '$' && mapData[row][col] != '.') {
-                        //Case 1.1: WALL-WALL DEADLOCK (top-left corner)
-                        if (mapData[row - 1][col] == '#' && mapData[row][col - 1] == '#') {
-                            result = true;
-                            break;
-                        }
-
-                    }
-                }
-            }
-            // for each box found,
-            // check if the box is in a deadlock position
-			// Conditions for deadlock:
-
-            // CASE 1: WALL-WALL CORNER DEADLOCK
-            //
-            //  XXX
-            //  XO
-            //  X
-            //
-            // CASE 2: WALL-BOX CORNER DEADLOCK
-            //
-            //  X O
-            //  X O
-            //  X
-            //
-            // CASE 3: BOX-BOX CORNER DEADLOCK
-            //
-            //    O
-            //  O O
-            //
-
-			return result;
-		}
-		*/
-		
-		private boolean isSolution(Character[][] currentState)
-		{
-			boolean result = false;
-			// Check if the given state is the solution for the puzzle
-			//
-			//
-			return result;
-		}
-		
-		Integer width, height;
-		Character[][] mapData, itemsData;
+		Integer boxes;
+		Character[][] mapData;
+		GameState itemsData;
 		String finalSequence = "";
 	}
 }

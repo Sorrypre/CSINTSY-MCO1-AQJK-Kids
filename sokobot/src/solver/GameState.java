@@ -1,5 +1,6 @@
 package solver;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,7 +20,18 @@ public class GameState {
 			for(int j = 0; j < state[i].length; j++)
 				// Add to itemsMap when the object is a box or a player
 				if ('$' == state[i][j] || '@' == state[i][j])
-					itemsMap.put(new Position(i, j), state[i][j]); else;
+					setItem(i, j, state[i][j]); else;
+		if (getPlayerPos() == null)
+			throw new NullPointerException("No player found on the given item data"); else;
+	}
+	
+	public GameState getCopy(Character[][] map) {
+		Character[][] itemData = new Character[map.length][];
+		for (Character[] row : itemData)
+			Arrays.fill(row, ' ');
+		for (Map.Entry<Position, Character> entry : itemsMap.entrySet())
+			itemData[entry.getKey().getRow()][entry.getKey().getCol()] = entry.getValue();
+		return new GameState(itemData);
 	}
 	
     public Character getItem(int row, int col) {
@@ -35,6 +47,10 @@ public class GameState {
         }
         else itemsMap.put(pos, item);
     }
+	
+	public void removeItem(int row, int col) {
+		itemsMap.remove(new Position(row, col));
+	}
 	
 	// Matches Wall-Wall, Wall-Box, Box-Box deadlock for each box
 	public boolean isAnyBoxCornered(Character[][] map) {
@@ -61,5 +77,57 @@ public class GameState {
 			}
 		}
 		return false;
+	}
+	
+	public boolean isSolution(Character[][] map, Integer expectedBoxes) {
+		int counter = 0;
+		if (map != null)
+			for (Map.Entry<Position, Character> entry : itemsMap.entrySet())
+				if ('$' == entry.getValue() && '.' == map[entry.getKey().getRow()][entry.getKey().getCol()])
+					counter++;
+		return map != null && expectedBoxes != null && expectedBoxes == counter;
+	}
+	
+	public Position getPlayerPos() {
+		for (Map.Entry<Position, Character> entry : itemsMap.entrySet())
+			if (entry.getValue() == '@')
+				return entry.getKey();
+		return null; // pag ichcheck ng constructor this is convenient
+	}
+	
+	public Object[] getPlayerVicinityData() {
+		// 4 inner directions * 2 outer directions * 2 data types
+		Object[] vicinityData = new Object[4 * 2 * 2];
+		// Current player position
+		Position pos = getPlayerPos();
+		
+		// Get objects surrounding the player as follows:
+		//        [1]
+		//        [0]
+		//  [5][4] @ [6][7]
+		//        [2]
+		//        [3]
+		
+		// Up
+		vicinityData[0] = new Position(pos.getRow() - 1, pos.getCol());
+		vicinityData[1] = getItem(pos.getRow() - 1, pos.getCol());
+		vicinityData[2] = new Position(pos.getRow() - 2, pos.getCol());
+		vicinityData[3] = getItem(pos.getRow() - 2, pos.getCol());
+		// Down
+		vicinityData[4] = new Position(pos.getRow() + 1, pos.getCol());
+		vicinityData[5] = getItem(pos.getRow() + 1, pos.getCol());
+		vicinityData[6] = new Position(pos.getRow() + 2, pos.getCol());
+		vicinityData[7] = getItem(pos.getRow() + 2, pos.getCol());
+		// Left
+		vicinityData[8] = new Position(pos.getRow(), pos.getCol() - 1);
+		vicinityData[9] = getItem(pos.getRow(), pos.getCol() - 1);
+		vicinityData[10] = new Position(pos.getRow(), pos.getCol() - 2);
+		vicinityData[11] = getItem(pos.getRow(), pos.getCol() - 2);
+		// Right
+		vicinityData[12] = new Position(pos.getRow(), pos.getCol() + 1);
+		vicinityData[13] = getItem(pos.getRow(), pos.getCol() + 1);
+		vicinityData[14] = new Position(pos.getRow(), pos.getCol() + 2);
+		vicinityData[15] = getItem(pos.getRow(), pos.getCol() + 2);
+		return vicinityData;
 	}
 }
