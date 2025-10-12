@@ -47,26 +47,49 @@ public class SokoBot {
 		
 		private SokoBotSequence() {}
 		
-		private Boolean[] Actions(GameState currentItemsData)
+		private Character[] Actions(GameState currentItemsData)
 		{
-			Boolean[] a = new Boolean[4];
-			if (!currentItemsData.isAnyBoxCornered(mapData))
-			{
-				// IMPORTANT!!
-				// The array of moves will follow the order: up, down, left, right.
-				// When the move is not possible, please set that index to false.
-				// For example, if up and left are not possible moves, then the contents
-				// of the array would be: { false, true, false, true }.
-				
-				// Obtain possible moves from state here
-				//
-				//
-			}
-			// Return resulting set of moves
-			return a;
+                //			Boolean[] a = new Boolean[4];
+                //			if (!currentItemsData.isAnyBoxCornered(mapData))
+                //			{
+                //				// IMPORTANT!!
+                //				// The array of moves will follow the order: up, down, left, right.
+                //				// When the move is not possible, please set that index to false.
+                //				// For example, if up and left are not possible moves, then the contents
+                //				// of the array would be: { false, true, false, true }.
+                //
+                //				// Obtain possible moves from state here
+                //				//
+                //				//
+                //                if ()
+                //			}
+                            // Return resulting set of moves
+            // actions represents {up 'u', down 'd', left 'l', right 'r'}
+            // if the move is not possible, the index of the assigned Character is null
+            Character[] actions = new Character[4];
+
+            //-- makeMove Method Pseudocode (incomplete)
+
+            //Player Move (No Box Push) if no box in the way
+            // Check if up is possible
+            if (mapData[currentItemsData.getPlayerPos().getRow() - 1][currentItemsData.getPlayerPos().getCol()] != '#' ||
+                    mapData[currentItemsData.getPlayerPos().getRow() - 1][currentItemsData.getPlayerPos().getCol()] != '#')
+                actions[0] = 'u'; // up
+            // Check if down is possible
+            // Check if left is possible
+            // Check if right is possible
+
+            // else if box in the way
+            // check cell beyond the box so (position of box + direction of move = cell beyond the box)
+            // if cell beyond the box is empty or a goal then player move and push box valid
+            // else move invalid if wall or another box
+
+            //optimization (focus on box pushes only rather than indiividual player moves) Use BFS to check if player can reach the position behind the box to push it
+
+			return actions;
 		}
 		
-		private GameState Succ(GameState currentItemsData, char action)
+		private GameState Succ(GameState currentItemsData, Character action)
 		{
 			Object[] vicinityData;
 			Character objInner, objOuter;
@@ -76,9 +99,11 @@ public class SokoBot {
 			if (!currentItemsData.isAnyBoxCornered(mapData))
 			{
 				// Clone the data so the parameter would not be overwritten
+                //Jensel Notes: pwede pa ito ma improve
 				succ = currentItemsData.getCopy(mapData);
 				playerPos = currentItemsData.getPlayerPos();
 				// Represent the index based on the chosen action
+
 				move =
 					'u' == action ? 0 :
 					'd' == action ? 4 :

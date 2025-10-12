@@ -24,10 +24,9 @@ public class Position {
     // public int hashCode()
     @Override
     public int hashCode() {
-        // implement a hash function
-        return -999;
+        return 31 * row + col;
     }
 
-    private int row;
-    private int col;
+    private final int row;
+    private final int col;
 }

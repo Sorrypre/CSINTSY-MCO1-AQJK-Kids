@@ -24,7 +24,7 @@ public class GameState {
 		if (getPlayerPos() == null)
 			throw new NullPointerException("No player found on the given item data"); else;
 	}
-	
+
 	public GameState getCopy(Character[][] map) {
 		Character[][] itemData = new Character[map.length][];
 		for (Character[] row : itemData)
@@ -90,7 +90,7 @@ public class GameState {
 	
 	public Position getPlayerPos() {
 		for (Map.Entry<Position, Character> entry : itemsMap.entrySet())
-			if (entry.getValue() == '@')
+			if (entry.getValue().equals('@'))
 				return entry.getKey();
 		return null; // pag ichcheck ng constructor this is convenient
 	}
@@ -107,25 +107,33 @@ public class GameState {
 		//  [5][4] @ [6][7]
 		//        [2]
 		//        [3]
-		
-		// Up
+		// even indices are Positions, odd indices are Characters example: [0] = Position, [1] = Character
+		// --Up--
+        // [0] Inner Up
 		vicinityData[0] = new Position(pos.getRow() - 1, pos.getCol());
 		vicinityData[1] = getItem(pos.getRow() - 1, pos.getCol());
+        // [1] Outer Up
 		vicinityData[2] = new Position(pos.getRow() - 2, pos.getCol());
 		vicinityData[3] = getItem(pos.getRow() - 2, pos.getCol());
-		// Down
+		// --Down--
+        // [2] Inner Down
 		vicinityData[4] = new Position(pos.getRow() + 1, pos.getCol());
 		vicinityData[5] = getItem(pos.getRow() + 1, pos.getCol());
+        // [3] Outer Down
 		vicinityData[6] = new Position(pos.getRow() + 2, pos.getCol());
 		vicinityData[7] = getItem(pos.getRow() + 2, pos.getCol());
-		// Left
+        // --Left--
+        // [4] Inner Left
 		vicinityData[8] = new Position(pos.getRow(), pos.getCol() - 1);
 		vicinityData[9] = getItem(pos.getRow(), pos.getCol() - 1);
+        // [5] Outer Left
 		vicinityData[10] = new Position(pos.getRow(), pos.getCol() - 2);
 		vicinityData[11] = getItem(pos.getRow(), pos.getCol() - 2);
-		// Right
+		// --Right--
+        // [6] Inner Right
 		vicinityData[12] = new Position(pos.getRow(), pos.getCol() + 1);
 		vicinityData[13] = getItem(pos.getRow(), pos.getCol() + 1);
+        // [7] Outer Right
 		vicinityData[14] = new Position(pos.getRow(), pos.getCol() + 2);
 		vicinityData[15] = getItem(pos.getRow(), pos.getCol() + 2);
 		return vicinityData;
