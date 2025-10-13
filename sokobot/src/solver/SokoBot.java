@@ -1,4 +1,6 @@
 package solver;
+import java.util.HashSet;
+import java.util.Queue;
 
 public class SokoBot {
 
@@ -33,7 +35,7 @@ public class SokoBot {
 				for (int j = 0; j < itemsData[i].length; j++)
 					items[i][j] = itemsData[i][j];
 			
-			this.itemsData = new GameState(items);
+			this.itemsData = new GameState(hashCode(), items);
 		}
 		
 		public String getSolutionAStar()
@@ -55,7 +57,13 @@ public class SokoBot {
 
             //-- makeMove Method Pseudocode (incomplete)
 
+			// comment (deppy0): di na need magcall ng getPlayerPos() all the time,
+			// see getPlayerVicinityData() and I think andun na lahat ng need mong
+			// Position and the corresponding symbols on that position, you just need
+			// to cast it to the proper type pag gagamitin mo na dito kasi array of Object sya
+
             //Player Move (No Box Push) if no box in the way
+
             // Check if up is possible
             if (mapData[currentItemsData.getPlayerPos().getRow() - 1][currentItemsData.getPlayerPos().getCol()] != '#' ||
                     mapData[currentItemsData.getPlayerPos().getRow() - 1][currentItemsData.getPlayerPos().getCol()] != '#')
@@ -76,67 +84,14 @@ public class SokoBot {
 		
 		private GameState Succ(GameState currentItemsData, Character action)
 		{
-			Object[] vicinityData;
-			Character objInner, objOuter;
-			Position objPosInner, objPosOuter, playerPos;
-			GameState succ;
-			int move;
-			if (!currentItemsData.isAnyBoxCornered(mapData))
-			{
-				// Clone the data so the parameter would not be overwritten
-                //Jensel Notes: pwede pa ito ma improve
-				succ = currentItemsData.getCopy(mapData);
-				playerPos = currentItemsData.getPlayerPos();
-				// Represent the index based on the chosen action
-
-				move =
-					'u' == action ? 0 :
-					'd' == action ? 4 :
-					'l' == action ? 8 : 12;
-				// Get respective vicinity data based on the action
-				vicinityData = succ.getPlayerVicinityData();
-				objPosInner = (Position)vicinityData[move + 0];
-				objInner = (Character)vicinityData[move + 1];
-				objPosOuter = (Position)vicinityData[move + 2];
-				objOuter = (Character)vicinityData[move + 3];
-				// Make sure player is not towards a wall
-				if (mapData[objPosInner.getRow()][objPosInner.getCol()] != '#')
-				{
-					// If player is towards a box, verify if it's clear for pushing by checking if there is
-					// no wall nor another box behind it
-					if ('$' == objInner && '#' != mapData[objPosOuter.getRow()][objPosOuter.getCol()] &&
-						' ' == objOuter)
-					{
-						// Player is clear for pushing the box
-						succ.setItem(objPosInner.getRow(), objPosInner.getCol(), '@');
-						succ.setItem(objPosOuter.getRow(), objPosOuter.getCol(), '$');
-						// Make sure to remove the last position of the player from the HashMap
-						succ.removeItem(playerPos.getRow(), playerPos.getCol());
-					}
-					// If the player is not towards a box whilst assuming player is not towards a wall as
-					// made sure by the outer if-block, then the player is towards a vacant tile and is free
-					// to move towards that way
-					else if ('$' != objInner)
-					{
-						// Player is clear for moving
-						succ.setItem(objPosInner.getRow(), objPosInner.getCol(), '@');
-						// Make sure to remove the last position of the player from the HashMap
-						succ.removeItem(playerPos.getRow(), playerPos.getCol());
-					}
-					// If none of these conditions fit, the player must be pushing a box with a
-					// wall or another box behind it, so the player cannot move, i.e. do nothing
-					else;
-				}
-				// Return resulting succeeding state
-				return succ;
-			}
-			// The state is deadlocked, the algorithm should not proceed further
-			else return null;
+			// On hold
 		}
-		
-		Integer boxes;
-		Character[][] mapData;
-		GameState itemsData;
-		String finalSequence = "";
+
+		private HashSet<String> visited = new HashSet<String>();
+
+		private Integer boxes;
+		private Character[][] mapData;
+		private GameState itemsData;
+		private String finalSequence = "";
 	}
 }

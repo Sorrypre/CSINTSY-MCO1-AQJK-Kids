@@ -3,6 +3,7 @@ package solver;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /*
  * Represents the state of the game, including positions of items.
@@ -11,11 +12,18 @@ import java.util.Map;
  */
 public class GameState {
     private final Map<Position, Character> itemsMap = new HashMap<>();
-	
+	private int sequenceHash;
+	private String stringForm;
+
 	private GameState() { }
 	
+	private void updateStringForm() {
+		stringForm = toString();
+	}
+
 	/* Constructor to convert given char[][] to a state */
-	public GameState(Character[][] items) {
+	public GameState(int sequenceHash, Character[][] items) {
+		this.sequenceHash = sequenceHash;
 		for (int i = 0; i < items.length; i++)
 			for(int j = 0; j < items[i].length; j++)
 				// Add to itemsMap when the object is a box or a player
@@ -23,6 +31,8 @@ public class GameState {
 					setItem(i, j, items[i][j]);
 		if (getPlayerPos() == null)
 			throw new NullPointerException("No player found on the given item data");
+		// Always update string form when altering the contents of the state
+		updateStringForm();
 	}
 
 	public GameState getCopy(Character[][] map) {
@@ -31,7 +41,11 @@ public class GameState {
 			Arrays.fill(row, ' ');
 		for (Map.Entry<Position, Character> entry : itemsMap.entrySet())
 			itemData[entry.getKey().getRow()][entry.getKey().getCol()] = entry.getValue();
-		return new GameState(itemData);
+		return new GameState(sequenceHash, itemData);
+	}
+
+	public HashMap<Position, Character> getItemsPos() {
+		return (HashMap<Position, Character>) itemsMap;
 	}
 	
     public Character getItem(int row, int col) {
@@ -46,10 +60,14 @@ public class GameState {
             itemsMap.remove(pos);// Remove the entry if the item is a space
         }
         else itemsMap.put(pos, item);
+		// Always update string form when altering the contents of the state
+		updateStringForm();
     }
 	
 	public void removeItem(int row, int col) {
 		itemsMap.remove(new Position(row, col));
+		// Always update string form when altering the contents of the state
+		updateStringForm();
 	}
 	
 	// Matches Wall-Wall, Wall-Box, Box-Box deadlock for each box
@@ -102,40 +120,67 @@ public class GameState {
 		Position pos = getPlayerPos();
 		
 		// Get objects surrounding the player as follows:
-		//        [1]
-		//        [0]
-		//  [5][4] @ [6][7]
-		//        [2]
-		//        [3]
-		// even indices are Positions, odd indices are Characters example: [0] = Position, [1] = Character
-		// --Up--
-        // [0] Inner Up
+		//         [2]
+		//         [0]
+		//  [10][8] @ [12][14]
+		//         [4]
+		//         [6]
+		// * Odd numbers will store the item symbols (Character) corresponding to
+		//   the previous even number.
+
+		// Up
 		vicinityData[0] = new Position(pos.getRow() - 1, pos.getCol());
 		vicinityData[1] = getItem(pos.getRow() - 1, pos.getCol());
-        // [1] Outer Up
 		vicinityData[2] = new Position(pos.getRow() - 2, pos.getCol());
 		vicinityData[3] = getItem(pos.getRow() - 2, pos.getCol());
-		// --Down--
-        // [2] Inner Down
+		// Down
 		vicinityData[4] = new Position(pos.getRow() + 1, pos.getCol());
 		vicinityData[5] = getItem(pos.getRow() + 1, pos.getCol());
-        // [3] Outer Down
 		vicinityData[6] = new Position(pos.getRow() + 2, pos.getCol());
 		vicinityData[7] = getItem(pos.getRow() + 2, pos.getCol());
-        // --Left--
-        // [4] Inner Left
+		// Left
 		vicinityData[8] = new Position(pos.getRow(), pos.getCol() - 1);
 		vicinityData[9] = getItem(pos.getRow(), pos.getCol() - 1);
-        // [5] Outer Left
 		vicinityData[10] = new Position(pos.getRow(), pos.getCol() - 2);
 		vicinityData[11] = getItem(pos.getRow(), pos.getCol() - 2);
-		// --Right--
-        // [6] Inner Right
+		// Right
 		vicinityData[12] = new Position(pos.getRow(), pos.getCol() + 1);
 		vicinityData[13] = getItem(pos.getRow(), pos.getCol() + 1);
-        // [7] Outer Right
 		vicinityData[14] = new Position(pos.getRow(), pos.getCol() + 2);
 		vicinityData[15] = getItem(pos.getRow(), pos.getCol() + 2);
 		return vicinityData;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder strb = new StringBuilder("" + sequenceHash);
+		// With the player and the boxes contained in the HashMap,
+		// parse the contents of the HashMap accordingly into a string.
+		//
+		// For example ang contents ng HashMap is:
+		// @ 0,0
+		// $ 3,8
+		// $ 4,7
+		// $ 2,2
+		//
+		// Then ang string form is, assuming SokoBotSequence hash is 13739415:
+		// "13739415|@0,0|$3,8|$4,7|$2,2"
+		for (Map.Entry<Position, Character> entry : itemsMap.entrySet()) {
+			strb.append("|" + entry.getValue() + "" + entry.getKey().getRow() +
+				"," + entry.getKey().getCol());
+		}
+		// Return the string
+		return strb.toString();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		return obj instanceof GameState && stringForm.equals(((GameState) obj).toString());
+	}
+
+	@Override
+	public int hashCode() {
+		// The hash of this class will come from its string form
+		return Objects.hashCode(stringForm);
 	}
 }
