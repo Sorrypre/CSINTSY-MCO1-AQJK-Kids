@@ -1,10 +1,9 @@
 package solver;
-import java.util.Queue;
 
 public class SokoBot {
 
 	public String solveSokobanPuzzle(int width, int height, char[][] mapData, char[][] itemsData) {
-		return new SokoBotSequence(mapData, itemsData).get();
+		return new SokoBotSequence(mapData, itemsData).getSolutionAStar();
 	}
 	
 	private class SokoBotSequence
@@ -37,11 +36,14 @@ public class SokoBot {
 			this.itemsData = new GameState(items);
 		}
 		
-		public String get()
+		public String getSolutionAStar()
 		{
 			// Solution to the given Sokoban stage using A* search, etc.
-			//
-			//
+			// implement frontier using priority queue
+			// implement explored using hash set
+            // use a heuristic function to estimate the cost from the current state to the goal state
+            // use a cost function to estimate the cost from the start state to the current state
+            // return the sequence of actions to reach the goal state
 			return finalSequence;
 		}
 		
@@ -49,23 +51,6 @@ public class SokoBot {
 		
 		private Character[] Actions(GameState currentItemsData)
 		{
-                //			Boolean[] a = new Boolean[4];
-                //			if (!currentItemsData.isAnyBoxCornered(mapData))
-                //			{
-                //				// IMPORTANT!!
-                //				// The array of moves will follow the order: up, down, left, right.
-                //				// When the move is not possible, please set that index to false.
-                //				// For example, if up and left are not possible moves, then the contents
-                //				// of the array would be: { false, true, false, true }.
-                //
-                //				// Obtain possible moves from state here
-                //				//
-                //				//
-                //                if ()
-                //			}
-                            // Return resulting set of moves
-            // actions represents {up 'u', down 'd', left 'l', right 'r'}
-            // if the move is not possible, the index of the assigned Character is null
             Character[] actions = new Character[4];
 
             //-- makeMove Method Pseudocode (incomplete)

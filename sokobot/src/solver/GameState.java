@@ -16,13 +16,13 @@ public class GameState {
 	
 	/* Constructor to convert given char[][] to a state */
 	public GameState(Character[][] items) {
-		for (int i = 0; i < state.length; i++)
-			for(int j = 0; j < state[i].length; j++)
+		for (int i = 0; i < items.length; i++)
+			for(int j = 0; j < items[i].length; j++)
 				// Add to itemsMap when the object is a box or a player
-				if ('$' == state[i][j] || '@' == state[i][j])
-					setItem(i, j, state[i][j]); else;
+				if ('$' == items[i][j] || '@' == items[i][j])
+					setItem(i, j, items[i][j]);
 		if (getPlayerPos() == null)
-			throw new NullPointerException("No player found on the given item data"); else;
+			throw new NullPointerException("No player found on the given item data");
 	}
 
 	public GameState getCopy(Character[][] map) {
