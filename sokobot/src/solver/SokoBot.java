@@ -1,41 +1,41 @@
 package solver;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Queue;
 
 public class SokoBot {
 
 	public String solveSokobanPuzzle(int width, int height, char[][] mapData, char[][] itemsData) {
-		return new SokoBotSequence(mapData, itemsData).getSolutionAStar();
+		return new SokoBotSequence(width, height, mapData, itemsData).getSolutionAStar();
 	}
 	
-	private class SokoBotSequence
+	private class SokoBotSequence implements stateBasedModelFunctions
 	{
-		public SokoBotSequence(char[][] mapData, char[][] itemsData)
+		public SokoBotSequence(int width, int height, char[][] mapData, char[][] itemsData)
 		{
 			if (null == mapData || null == itemsData)
 				throw new IllegalArgumentException("mapData or itemsData cannot be null");
-			
-			Character[][] items;
-			this.boxes = 0;
-			this.mapData = new Character[mapData.length][];
-			for (int i = 0; i < mapData.length; i++)
+
+			this.mapData = new Character[height][width];
+			this.numGoals = 0;
+
+			for (int i = 0; i < height; i++)
 			{
-				for (int j = 0; i < mapData[i].length; j++)
+				for (int j = 0; j < width; j++)
 				{
 					this.mapData[i][j] = mapData[i][j];
 					if ('.' == mapData[i][j])
-						this.boxes++;
+						this.numGoals++;
 				}
 			}
-			if (0 == boxes)
-				throw new NullPointerException("There are no boxes found in this game level");
-			
-			items = new Character[itemsData.length][];
+
+            //initialize first state by converting itemsData to Character[][]
+			Character[][] items = new Character[height][width];
 			for (int i = 0; i < itemsData.length; i++)
 				for (int j = 0; j < itemsData[i].length; j++)
 					items[i][j] = itemsData[i][j];
 			
-			this.itemsData = new GameState(hashCode(), items);
+			this.intialStateItemsData = new GameState(hashCode(), items);
 		}
 		
 		public String getSolutionAStar()
@@ -50,48 +50,48 @@ public class SokoBot {
 		}
 		
 		private SokoBotSequence() {}
+
+        private boolean isDeadlock(GameState state) {
+            // Check for simple deadlocks: box in a corner not on a goal
+            // Check for more complex deadlocks: boxes against walls or other boxes in a way that makes it impossible to move them to goals
+            // Return true if a deadlock is detected, false otherwise
+            return false; // Placeholder return value
+        }
 		
 		private Character[] Actions(GameState currentItemsData)
 		{
             Character[] actions = new Character[4];
 
-            //-- makeMove Method Pseudocode (incomplete)
-
-			// comment (deppy0): di na need magcall ng getPlayerPos() all the time,
-			// see getPlayerVicinityData() and I think andun na lahat ng need mong
-			// Position and the corresponding symbols on that position, you just need
-			// to cast it to the proper type pag gagamitin mo na dito kasi array of Object sya
-
-            //Player Move (No Box Push) if no box in the way
-
-            // Check if up is possible
-            if (mapData[currentItemsData.getPlayerPos().getRow() - 1][currentItemsData.getPlayerPos().getCol()] != '#' ||
-                    mapData[currentItemsData.getPlayerPos().getRow() - 1][currentItemsData.getPlayerPos().getCol()] != '#')
-                actions[0] = 'u'; // up
-            // Check if down is possible
-            // Check if left is possible
-            // Check if right is possible
-
-            // else if box in the way
-            // check cell beyond the box so (position of box + direction of move = cell beyond the box)
-            // if cell beyond the box is empty or a goal then player move and push box valid
-            // else move invalid if wall or another box
-
-            //optimization (focus on box pushes only rather than indiividual player moves) Use BFS to check if player can reach the position behind the box to push it
-
 			return actions;
 		}
-		
-		private GameState Succ(GameState currentItemsData, Character action)
+
+        @Override
+        public boolean isEnd(GameState state) {
+            return state.isSolution(mapData, numGoals);
+        }
+
+        @Override
+        public int cost() {
+            return 1;
+        }
+
+        @Override
+        public Boolean actions(GameState state) {
+            return null;
+        }
+
+        public GameState Succ(GameState currentItemsData, Character action)
 		{
 			// On hold
+            return null;
 		}
 
+        // may need to be a local variable of the getSolutionAStar method alongside the frontier priority queue
 		private HashSet<String> visited = new HashSet<String>();
 
-		private Integer boxes;
+		private Integer numGoals;
 		private Character[][] mapData;
-		private GameState itemsData;
+		private GameState intialStateItemsData;
 		private String finalSequence = "";
 	}
 }
