@@ -1,7 +1,5 @@
 package solver;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 
 public class SokoBot {
 
@@ -31,8 +29,8 @@ public class SokoBot {
 
             //initialize first state by converting itemsData to Character[][]
 			Character[][] items = new Character[height][width];
-			for (int i = 0; i < itemsData.length; i++)
-				for (int j = 0; j < itemsData[i].length; j++)
+			for (int i = 0; i < height; i++)
+				for (int j = 0; j < width; j++)
 					items[i][j] = itemsData[i][j];
 			
 			this.intialStateItemsData = new GameState(hashCode(), items);
@@ -51,20 +49,62 @@ public class SokoBot {
 		
 		private SokoBotSequence() {}
 
-        private boolean isDeadlock(GameState state) {
+        private boolean isValidMove(GameState state, Character move) {
+            // Check if the move is valid based on the current state and mapData
+            Position playerPos = state.getPlayerPos();
+            Position movePos;
+            int moveNumerical;
+
+            // convert move character to vicinity coordinate
+            switch (move) {
+                case 'U':
+                    moveNumerical = 0;
+                    movePos = (Position)state.getPlayerVicinityData()[moveNumerical];
+                    break;
+                case 'D':
+                    moveNumerical = 4;
+                    movePos = (Position)state.getPlayerVicinityData()[moveNumerical];
+                    break;
+                case 'L':
+                    moveNumerical = 8;
+                    movePos = (Position)state.getPlayerVicinityData()[moveNumerical];
+                    break;
+                case 'R':
+                    moveNumerical = 12;
+                    movePos = (Position)state.getPlayerVicinityData()[moveNumerical];
+                    break;
+                default:
+                    return false; // Invalid move character
+            }
+
+            // Check if the move is within bounds and not into a wall
+            if (mapData[movePos.getRow()][movePos.getCol()] == '#') {
+                return false; // Wall
+            }
+
+            // Check if pushing a box is valid
+            if (state.getPlayerVicinityData()[moveNumerical + 1].equals('$')) { // If there's a box in the direction of the move
+                // Check if the space beyond the box is free (not a wall or another box)
+                Position outerVicinity = ((Position)state.getPlayerVicinityData()[moveNumerical + 2]);
+                return mapData[outerVicinity.getRow()][outerVicinity.getCol()] != '#'
+                        && !state.getPlayerVicinityData()[moveNumerical + 3].equals('$'); // Can't push the box because there's a wall or another box
+            }
+
+            // Return true if the move is valid
+            return true;
+        }
+
+        private boolean isDeadlock(GameState state, Character move) {
             // Check for simple deadlocks: box in a corner not on a goal
             // Check for more complex deadlocks: boxes against walls or other boxes in a way that makes it impossible to move them to goals
             // Return true if a deadlock is detected, false otherwise
             return false; // Placeholder return value
         }
-		
-		private Character[] Actions(GameState currentItemsData)
-		{
-            Character[] actions = new Character[4];
 
-			return actions;
-		}
-
+        /*  ----------------------------------------------------------------
+         *  Methods required by the stateBasedModelFunctions interface
+         * ----------------------------------------------------------------
+         */
         @Override
         public boolean isEnd(GameState state) {
             return state.isSolution(mapData, numGoals);
@@ -76,9 +116,23 @@ public class SokoBot {
         }
 
         @Override
-        public Boolean actions(GameState state) {
-            return null;
+        public ArrayList<Character> actions(GameState state) {
+            ArrayList<Character> actions = new ArrayList<>(Arrays.asList('U', 'D', 'L', 'R'));
+
+            // Remove actions that would lead to deadlocks and invalid moves
+            for (Character action : actions) {
+                // first, check the move if it is a valid move
+                if (!isValidMove(state, action)) {
+                    actions.remove(action);
+                }
+                // then, check if the move would lead to a deadlock
+                else if (isDeadlock(state, action)) {
+                    actions.remove(action);
+                }
+            }
+            return actions;
         }
+
 
         public GameState Succ(GameState currentItemsData, Character action)
 		{
@@ -88,7 +142,6 @@ public class SokoBot {
 
         // may need to be a local variable of the getSolutionAStar method alongside the frontier priority queue
 		private HashSet<String> visited = new HashSet<String>();
-
 		private Integer numGoals;
 		private Character[][] mapData;
 		private GameState intialStateItemsData;
