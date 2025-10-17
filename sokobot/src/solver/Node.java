@@ -21,4 +21,6 @@ public class Node {
     private final GameState state;
     private final Node parent;
     private final int fScore;
+    // computation of backtracking of previous players moves can be done using parent node -> parentNodeState -> parentNodeStatePlayer Position
+    // this will be useful when reconstructing the solution path once the goal state is reached
 }
