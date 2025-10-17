@@ -117,7 +117,7 @@ public class SokoBot {
 
         @Override
         public ArrayList<Character> actions(GameState state) {
-            ArrayList<Character> actions = new ArrayList<>(Arrays.asList('U', 'D', 'L', 'R'));
+            ArrayList<Character> actions = new ArrayList<>(Arrays.asList('u', 'd', 'l', 'r'));
 
             // Remove actions that would lead to deadlocks and invalid moves
             for (Character action : actions) {
@@ -132,9 +132,9 @@ public class SokoBot {
             }
             return actions;
         }
-
-
-        public GameState Succ(GameState currentItemsData, Character action)
+		
+		@Override
+        public GameState Succ(GameState g, Moveset m)
 		{
 			// On hold
             return null;
