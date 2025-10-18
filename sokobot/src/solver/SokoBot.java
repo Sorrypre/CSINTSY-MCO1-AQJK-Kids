@@ -133,13 +133,70 @@ public class SokoBot {
             return actions;
         }
 		
-		@Override
-        public GameState Succ(GameState g, Moveset m)
-		{
-			// On hold
-            return null;
+		// If successful, returns a new GameState where the target box of the given Moveset is
+		// pushed by the player
+		// Returns null if given GameState is already a deadlock and shall not be traversed further
+		// Returns the given GameState if the box cannot be pushed towards the desired direction
+		// of the given Moveset
+		@Overrides
+        public GameState Succ(GameState g, Moveset m) {
+			// Check if the current state is a deadlock
+			if (g.isAnyBoxCornered(mapData))
+				return null; // Dead state
+			// Gather information from parameters
+			GameState gnew = g.getCopy();
+			Position statePos = g.getPlayerPos();
+			Position oldPos = m.getMSPlayerPos();
+			Position boxPos = m.getBoxPos();
+			// Declarations for process
+			Position innerPos = null;
+			Position outerPos = null;
+			Object[] playerVicinityData = null;
+			boolean succFound = false;
+			int innerIndex = 0;
+			// Verify state by checking if player position in the given Moveset is not pointing to a wall
+			if (gnew.getItem(oldPos.getRow(), oldPos.getCol()) == ' ' && mapData[oldPos.getRow()][oldPos.getCol()] != '#') {
+				// Move player on copy state
+				gnew.removeItem(statePos.getRow(), statePos.getCol());
+				gnew.setItem(oldPos.getRow(), oldPos.getCol(), '@');
+				// Verify state by checking if box position in the given Moveset is indeed a box
+				if (gnew.getItem(boxPos.getRow(), boxPos.getCol()) == '$') {
+					playerVicinityData = gnew.getPlayerVicinityData();
+					// Test each direction and push wherever boxPos matches
+					do {
+						innerPos = (Position)playerVicinityData[innerIndex];
+						outerPos = (Position)playerVicinityData[innerIndex + 2];
+						if (innerPos.equals(boxPos) && gnew.getItem(outerPos.getRow(), outerPos.getCol()) == ' ') {
+							if (mapData[outerPos.getRow()][outerPos.getCol()] != '#') {
+								gnew.setItem(outerPos.getRow(), outerPos.getCol(), '$');
+								gnew.setItem(innerPos.getRow(), innerPos.getCol(), '@');
+								gnew.removeItem(oldPos);
+								succFound = true;
+							}
+							else
+								// Error handling in case of a mistake somewhere else
+								throw new RuntimeException("Succ(g,m) on state#" + g.hashCode() + ": expecting row " + outerPos.getRow() +
+									" col " + outerPos.getCol() + " to be ' ', but found '" + gnew.getItem(outerPos.getRow(), outerPos.getCol()) + "'");
+						} else innerIndex += 4;
+					} while (!succFound && innerIndex <= 4 * 3);
+					// Box push successful
+					if (succFound)
+						return gnew.isAnyBoxCornered(mapData) ? null : gnew;
+					else
+						// Error handling in case of a mistake somewhere else
+						throw new RuntimeException("Succ(g,m) on state#" + g.hashCode() + ": no boxes found on desired direction");
+				}
+				else
+					// Error handling in case of a mistake somewhere else
+					throw new RuntimeException("Succ(g,m) on state#" + g.hashCode() + ": expecting row " + boxPos.getRow() + " col " +
+						boxPos.getCol() + " to be '$', but found '" + gnew.getItem(boxPos.getRow(), boxPos.getCol()) + "'");
+			}
+			else
+				// Error handling in case of a mistake somewhere else
+				throw new RuntimeException("Succ(g,m) on state#" + g.hashCode() + ": row " + oldPos.getRow() +
+					" col " + oldPos.getCol() + " is not vacant");
 		}
-
+		
         // may need to be a local variable of the getSolutionAStar method alongside the frontier priority queue
 		private HashSet<String> visited = new HashSet<String>();
 		private Integer numGoals;
