@@ -138,7 +138,7 @@ public class SokoBot {
 		// Returns null if given GameState is already a deadlock and shall not be traversed further
 		// Returns the given GameState if the box cannot be pushed towards the desired direction
 		// of the given Moveset
-		@Overrides
+		@Override
         public GameState Succ(GameState g, Moveset m) {
 			// Check if the current state is a deadlock
 			if (g.isAnyBoxCornered(mapData))
@@ -205,3 +205,4 @@ public class SokoBot {
 		private String finalSequence = "";
 	}
 }
+
