@@ -9,7 +9,7 @@ public class Moveset
 	
 	public Position getBoxPos() { return boxPos; }
 	
-	public Position getPlayerPos() { return playerPos; }
+	public Position getMSPlayerPos() { return playerPos; }
 	
 	public ArrayList<Character> getMoveSequence() { return move_sequence; }
 	
