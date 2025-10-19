@@ -140,7 +140,7 @@ public class SokoBot {
 		@Override
         public Object[] Succ(GameState g, Moveset m) {
 			// Gather information from parameters
-			GameState gnew = g.getCopy(mapData);
+			GameState gnew = g.getCopy();
 			Position statePos = g.getPlayerPos();
 			Position oldPos = m.getMSPlayerPos();
 			Position oldBoxPos = m.getBoxPos();
@@ -169,25 +169,23 @@ public class SokoBot {
 							if (mapData[outerPos.getRow()][outerPos.getCol()] != '#') {
 								gnew.setItem(outerPos.getRow(), outerPos.getCol(), '$');
 								gnew.setItem(innerPos.getRow(), innerPos.getCol(), '@');
-								gnew.removeItem(oldPos.getRow(), oldPos.getCol());
-								newPos = new Position(oldBoxPos.getRow(), oldBoxPos.getCol());
+								gnew.removeItem(oldPos);
+								newPos = new Position(innerPos.getRow(), innerPos.getCol());
+								newBoxPos = new Position(outerPos.getRow(), outerPos.getCol());
 								switch (innerIndex) {
 									default:
+										throw new RuntimeException("Succ(g,m) on state#" + g.hashCode() + ": invalid innerIndex, got " + innerIndex);
 									case 0:
 										move_sequence.add('u');
-										newBoxPos = new Position(oldBoxPos.getRow() - 1, oldBoxPos.getCol());
 										break;
 									case 4:
 										move_sequence.add('d');
-										newBoxPos = new Position(oldBoxPos.getRow() + 1, oldBoxPos.getCol());
 										break;
 									case 8:
 										move_sequence.add('l');
-										newBoxPos = new Position(oldBoxPos.getRow(), oldBoxPos.getCol() - 1);
 										break;
 									case 12:
 										move_sequence.add('r');
-										newBoxPos = new Position(oldBoxPos.getRow(), oldBoxPos.getCol() + 1);
 										break;
 								}
 								succFound = true;
@@ -217,8 +215,8 @@ public class SokoBot {
 				}
 				else
 					// Error handling in case of a mistake somewhere else
-					throw new RuntimeException("Succ(g,m) on state#" + g.hashCode() + ": expecting row " + oldBoxPos.getRow() + " col " +
-                            oldBoxPos.getCol() + " to be '$', but found '" + gnew.getItem(oldBoxPos.getRow(), oldBoxPos.getCol()) + "'");
+					throw new RuntimeException("Succ(g,m) on state#" + g.hashCode() + ": expecting row " + boxPos.getRow() + " col " +
+						boxPos.getCol() + " to be '$', but found '" + gnew.getItem(boxPos.getRow(), boxPos.getCol()) + "'");
 			}
 			else
 				// Error handling in case of a mistake somewhere else
