@@ -15,11 +15,11 @@ public class Node {
 		return moveset;
 	}
 	public int getPathLength() {
-		return moveset.size();
+		return moveset.getMoveSequence().size();
 	}
     // getter for parent node or the previous state encapsulated in the node (yes di ko na alam )
     public Node getParent() {
-        return parent;
+        return previous;
     }
     public int getFScore() {
         return fScore;

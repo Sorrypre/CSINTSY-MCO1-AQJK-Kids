@@ -7,5 +7,5 @@ public interface stateBasedModelFunctions {
     // The cost of each action is 1 so we return 1
     public int cost();
     public ArrayList<Character> actions(GameState state);
-    public GameState Succ(GameState g, Moveset m);
+    public Object[] Succ(GameState g, Moveset m);
 }

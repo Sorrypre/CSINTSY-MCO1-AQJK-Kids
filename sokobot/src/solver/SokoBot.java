@@ -140,7 +140,7 @@ public class SokoBot {
 		@Override
         public Object[] Succ(GameState g, Moveset m) {
 			// Gather information from parameters
-			GameState gnew = g.getCopy();
+			GameState gnew = g.getCopy(mapData);
 			Position statePos = g.getPlayerPos();
 			Position oldPos = m.getMSPlayerPos();
 			Position oldBoxPos = m.getBoxPos();
@@ -169,7 +169,7 @@ public class SokoBot {
 							if (mapData[outerPos.getRow()][outerPos.getCol()] != '#') {
 								gnew.setItem(outerPos.getRow(), outerPos.getCol(), '$');
 								gnew.setItem(innerPos.getRow(), innerPos.getCol(), '@');
-								gnew.removeItem(oldPos);
+								gnew.removeItem(oldPos.getRow(), oldPos.getCol());
 								newPos = new Position(innerPos.getRow(), innerPos.getCol());
 								newBoxPos = new Position(outerPos.getRow(), outerPos.getCol());
 								switch (innerIndex) {
@@ -215,8 +215,8 @@ public class SokoBot {
 				}
 				else
 					// Error handling in case of a mistake somewhere else
-					throw new RuntimeException("Succ(g,m) on state#" + g.hashCode() + ": expecting row " + boxPos.getRow() + " col " +
-						boxPos.getCol() + " to be '$', but found '" + gnew.getItem(boxPos.getRow(), boxPos.getCol()) + "'");
+					throw new RuntimeException("Succ(g,m) on state#" + g.hashCode() + ": expecting row " + oldBoxPos.getRow() + " col " +
+                            oldBoxPos.getCol() + " to be '$', but found '" + gnew.getItem(oldBoxPos.getRow(), oldBoxPos.getCol()) + "'");
 			}
 			else
 				// Error handling in case of a mistake somewhere else
