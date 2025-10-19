@@ -78,17 +78,23 @@ public class GameState {
 			// Deadlock only happens when the box is not on a goal tile
 			if (entry.getValue() == '$' && map[entry.getKey().getRow()][entry.getKey().getCol()] != '.') {
 				// Get map characters on the box's vicinity as follows:
-				//     [0]
-				//  [2] $ [3]
-				//     [1]
-				vicinity = new Character[4];
+				//      [0;1]
+				//  [4;5] $ [6;7]
+				//      [2;3]
+				// * Even numbers 0,2,4,6 checks the given map parameter
+				// * Odd numbers 1,3,5,7 checks the instance itemsData
+				vicinity = new Character[8];
 				vicinity[0] = map[entry.getKey().getRow() - 1][entry.getKey().getCol()];
-				vicinity[1] = map[entry.getKey().getRow() + 1][entry.getKey().getCol()];
-				vicinity[2] = map[entry.getKey().getRow()][entry.getKey().getCol() - 1];
-				vicinity[3] = map[entry.getKey().getRow()][entry.getKey().getCol() + 1];
+				vicinity[1] = getItem(entry.getKey().getRow() - 1, entry.getKey().getCol());
+				vicinity[2] = map[entry.getKey().getRow() + 1][entry.getKey().getCol()];
+				vicinity[3] = getItem(entry.getKey().getRow() + 1, entry.getKey().getCol());
+				vicinity[4] = map[entry.getKey().getRow()][entry.getKey().getCol() - 1];
+				vicinity[5] = getItem(entry.getKey().getRow(), entry.getKey().getCol() - 1);
+				vicinity[6] = map[entry.getKey().getRow()][entry.getKey().getCol() + 1];
+				vicinity[7] = getItem(entry.getKey().getRow(), entry.getKey().getCol() + 1);
 				// Check if there is a box or a wall adjacent to [0] or [1]
-				if (("$#".indexOf(vicinity[0]) != -1 || "$#".indexOf(vicinity[1]) != -1) &&
-					("$#".indexOf(vicinity[2]) != -1 || "$#".indexOf(vicinity[3]) != -1))
+				if ((vicinity[0] == '#' || vicinity[1] == '$' || vicinity[2] == '#' || vicinity[3] == '$') &&
+					(vicinity[4] == '#' || vicinity[5] == '$' || vicinity[6] == '#' || vicinity[7] == '$'))
 					return true;
 				else
 					vicinity = null;

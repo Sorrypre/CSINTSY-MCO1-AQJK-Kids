@@ -1,3 +1,7 @@
+package solver;
+
+import java.util.ArrayList;
+
 public class Moveset
 {
 	public Moveset(Position boxPos, Position playerPos, ArrayList<Character> move_sequence)
@@ -9,7 +13,7 @@ public class Moveset
 	
 	public Position getBoxPos() { return boxPos; }
 	
-	public Position getPlayerPos() { return playerPos; }
+	public Position getMSPlayerPos() { return playerPos; }
 	
 	public ArrayList<Character> getMoveSequence() { return move_sequence; }
 	
