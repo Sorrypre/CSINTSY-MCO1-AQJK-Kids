@@ -139,9 +139,6 @@ public class SokoBot {
 		//   (this is computed on a separate method)
 		@Override
         public Object[] Succ(GameState g, Moveset m) {
-			// Check if the current state is a deadlock
-			if (g.isAnyBoxCornered(mapData))
-				return null; // Dead state
 			// Gather information from parameters
 			GameState gnew = g.getCopy();
 			Position statePos = g.getPlayerPos();
@@ -222,7 +219,7 @@ public class SokoBot {
 					" col " + oldPos.getCol() + " is not vacant");
 		}
 		
-		private int computeManhattan(Position boxPos) {
+		private Integer computeManhattan(Position boxPos) {
 			ArrayList<Integer> distances = new ArrayList<Integer>();
 			for (Position goal : goalTiles)
 				distances.add(Math.abs(boxPos.getCol() - goal.getCol()) +
