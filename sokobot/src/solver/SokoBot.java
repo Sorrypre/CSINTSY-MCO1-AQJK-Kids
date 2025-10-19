@@ -15,7 +15,6 @@ public class SokoBot {
 				throw new IllegalArgumentException("mapData or itemsData cannot be null");
 
 			this.mapData = new Character[height][width];
-			this.numGoals = 0;
 
 			for (int i = 0; i < height; i++)
 			{
@@ -23,7 +22,7 @@ public class SokoBot {
 				{
 					this.mapData[i][j] = mapData[i][j];
 					if ('.' == mapData[i][j])
-						this.numGoals++;
+						this.goalTiles.add(new Position(i, j));
 				}
 			}
 
@@ -107,7 +106,7 @@ public class SokoBot {
          */
         @Override
         public boolean isEnd(GameState state) {
-            return state.isSolution(mapData, numGoals);
+            return state.isSolution(mapData, goalTiles.size());
         }
 
         @Override
@@ -133,13 +132,13 @@ public class SokoBot {
             return actions;
         }
 		
-		// If successful, returns a new GameState where the target box of the given Moveset is
-		// pushed by the player
-		// Returns null if given GameState is already a deadlock and shall not be traversed further
-		// Returns the given GameState if the box cannot be pushed towards the desired direction
-		// of the given Moveset
+		// Return value contains:
+		// - new GameState, or null if the succeeding state is deadlocked
+		// - same MoveSet except the identified push direction appended to ArrayList<Character>
+		// - Manhattan distance between the box of the new state and the goal tile in the mapData
+		//   (this is computed on a separate method)
 		@Override
-        public GameState Succ(GameState g, Moveset m) {
+        public Object[] Succ(GameState g, Moveset m) {
 			// Check if the current state is a deadlock
 			if (g.isAnyBoxCornered(mapData))
 				return null; // Dead state
@@ -148,6 +147,7 @@ public class SokoBot {
 			Position statePos = g.getPlayerPos();
 			Position oldPos = m.getMSPlayerPos();
 			Position boxPos = m.getBoxPos();
+			ArrayList<Character> move_sequence = m.getMoveSequence();
 			// Declarations for process
 			Position innerPos = null;
 			Position outerPos = null;
@@ -171,6 +171,21 @@ public class SokoBot {
 								gnew.setItem(outerPos.getRow(), outerPos.getCol(), '$');
 								gnew.setItem(innerPos.getRow(), innerPos.getCol(), '@');
 								gnew.removeItem(oldPos);
+								switch (innerIndex) {
+									default:
+									case 0:
+										move_sequence.add('u');
+										break;
+									case 4:
+										move_sequence.add('d');
+										break;
+									case 8:
+										move_sequence.add('l');
+										break;
+									case 12:
+										move_sequence.add('r');
+										break;
+								}
 								succFound = true;
 							}
 							else
@@ -180,8 +195,18 @@ public class SokoBot {
 						} else innerIndex += 4;
 					} while (!succFound && innerIndex <= 4 * 3);
 					// Box push successful
-					if (succFound)
-						return gnew.isAnyBoxCornered(mapData) ? null : gnew;
+					if (succFound) {
+						// Return value contains:
+						// - new GameState
+						// - same MoveSet except the identified push direction appended to ArrayList<Character>
+						// - Manhattan distance between the box of the new state and the goal tile in the mapData
+						//   (this is computed on a separate method)
+						return new Object[] {
+							gnew.isAnyBoxCornered(mapData) ? null : gnew,
+							new Moveset(m.getBoxPos(), m.getPlayerPos(), move_sequence),
+							computeManhattan(m.getBoxPos())
+						};
+					}
 					else
 						// Error handling in case of a mistake somewhere else
 						throw new RuntimeException("Succ(g,m) on state#" + g.hashCode() + ": no boxes found on desired direction");
@@ -197,12 +222,19 @@ public class SokoBot {
 					" col " + oldPos.getCol() + " is not vacant");
 		}
 		
+		private int computeManhattan(Position boxPos) {
+			ArrayList<Integer> distances = new ArrayList<Integer>();
+			for (Position goal : goalTiles)
+				distances.add(Math.abs(boxPos.getCol() - goal.getCol()) +
+					Math.abs(boxPos.getRow() - goal.getRow()));
+			return Collections.max(distances);
+		}
+		
         // may need to be a local variable of the getSolutionAStar method alongside the frontier priority queue
 		private HashSet<String> visited = new HashSet<String>();
-		private Integer numGoals;
+		private ArrayList<Position> goalTiles = new ArrayList<Position>();
 		private Character[][] mapData;
 		private GameState intialStateItemsData;
 		private String finalSequence = "";
 	}
 }
-
