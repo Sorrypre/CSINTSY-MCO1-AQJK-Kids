@@ -170,24 +170,22 @@ public class SokoBot {
 								gnew.setItem(outerPos.getRow(), outerPos.getCol(), '$');
 								gnew.setItem(innerPos.getRow(), innerPos.getCol(), '@');
 								gnew.removeItem(oldPos);
-								newPos = new Position(oldBoxPos.getRow(), oldBoxPos.getCol());
+								newPos = new Position(innerPos.getRow(), innerPos.getCol());
+								newBoxPos = new Position(outerPos.getRow(), outerPos.getCol());
 								switch (innerIndex) {
 									default:
+										throw new RuntimeException("Succ(g,m) on state#" + g.hashCode() + ": invalid innerIndex, got " + innerIndex);
 									case 0:
 										move_sequence.add('u');
-										newBoxPos = new Position(oldBoxPos.getRow() - 1, oldBoxPos.getCol());
 										break;
 									case 4:
 										move_sequence.add('d');
-										newBoxPos = new Position(oldBoxPos.getRow() + 1, oldBoxPos.getCol());
 										break;
 									case 8:
 										move_sequence.add('l');
-										newBoxPos = new Position(oldBoxPos.getRow(), oldBoxPos.getCol() - 1);
 										break;
 									case 12:
 										move_sequence.add('r');
-										newBoxPos = new Position(oldBoxPos.getRow(), oldBoxPos.getCol() + 1);
 										break;
 								}
 								succFound = true;
