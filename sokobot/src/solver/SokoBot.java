@@ -143,11 +143,13 @@ public class SokoBot {
 			GameState gnew = g.getCopy();
 			Position statePos = g.getPlayerPos();
 			Position oldPos = m.getMSPlayerPos();
-			Position boxPos = m.getBoxPos();
+			Position oldBoxPos = m.getBoxPos();
 			ArrayList<Character> move_sequence = m.getMoveSequence();
 			// Declarations for process
 			Position innerPos = null;
 			Position outerPos = null;
+			Position newPos = null;
+			Position newBoxPos = null;
 			Object[] playerVicinityData = null;
 			boolean succFound = false;
 			int innerIndex = 0;
@@ -157,30 +159,35 @@ public class SokoBot {
 				gnew.removeItem(statePos.getRow(), statePos.getCol());
 				gnew.setItem(oldPos.getRow(), oldPos.getCol(), '@');
 				// Verify state by checking if box position in the given Moveset is indeed a box
-				if (gnew.getItem(boxPos.getRow(), boxPos.getCol()) == '$') {
+				if (gnew.getItem(oldBoxPos.getRow(), oldBoxPos.getCol()) == '$') {
 					playerVicinityData = gnew.getPlayerVicinityData();
-					// Test each direction and push wherever boxPos matches
+					// Test each direction and push wherever oldBoxPos matches
 					do {
 						innerPos = (Position)playerVicinityData[innerIndex];
 						outerPos = (Position)playerVicinityData[innerIndex + 2];
-						if (innerPos.equals(boxPos) && gnew.getItem(outerPos.getRow(), outerPos.getCol()) == ' ') {
+						if (innerPos.equals(oldBoxPos) && gnew.getItem(outerPos.getRow(), outerPos.getCol()) == ' ') {
 							if (mapData[outerPos.getRow()][outerPos.getCol()] != '#') {
 								gnew.setItem(outerPos.getRow(), outerPos.getCol(), '$');
 								gnew.setItem(innerPos.getRow(), innerPos.getCol(), '@');
 								gnew.removeItem(oldPos);
+								newPos = new Position(oldBoxPos.getRow(), oldBoxPos.getCol());
 								switch (innerIndex) {
 									default:
 									case 0:
 										move_sequence.add('u');
+										newBoxPos = new Position(oldBoxPos.getRow() - 1, oldBoxPos.getCol());
 										break;
 									case 4:
 										move_sequence.add('d');
+										newBoxPos = new Position(oldBoxPos.getRow() + 1, oldBoxPos.getCol());
 										break;
 									case 8:
 										move_sequence.add('l');
+										newBoxPos = new Position(oldBoxPos.getRow(), oldBoxPos.getCol() - 1);
 										break;
 									case 12:
 										move_sequence.add('r');
+										newBoxPos = new Position(oldBoxPos.getRow(), oldBoxPos.getCol() + 1);
 										break;
 								}
 								succFound = true;
@@ -200,8 +207,8 @@ public class SokoBot {
 						//   (this is computed on a separate method)
 						return new Object[] {
 							gnew.isAnyBoxCornered(mapData) ? null : gnew,
-							new Moveset(m.getBoxPos(), m.getPlayerPos(), move_sequence),
-							computeManhattan(m.getBoxPos())
+							new Moveset(newBoxPos, newPos, move_sequence),
+							computeManhattan(newBoxPos)
 						};
 					}
 					else
