@@ -59,8 +59,8 @@ public class SokoBot {
 					next = Succ(current, m);
 					// If the next state is both not deadlocked and not explored,
 					// then add the state to the frontier as a new Node
-					if (next[0] != null && !explored.contains(next[0]))
-						frontier.add(new Node(next[0], next[1], minimum, next[2]));
+					if ((GameState)next[0] != null && !explored.contains((GameState)next[0]))
+						frontier.add(new Node((GameState)next[0], (Moveset)next[1], minimum, (Integer)next[2]));
 				}
 				if (!frontier.isEmpty()) {
 					// Assuming the frontier is not empty, find the Node with the least f(n)
