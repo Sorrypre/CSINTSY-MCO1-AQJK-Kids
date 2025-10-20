@@ -172,7 +172,8 @@ public class GameState {
 		// Then ang string form is, assuming SokoBotSequence hash is 13739415:
 		// "13739415|@0,0|$3,8|$4,7|$2,2"
 		for (Map.Entry<Position, Character> entry : itemsMap.entrySet()) {
-			strb.append("|").append(entry.getValue()).append(entry.getKey().getRow()).append(",").append(entry.getKey().getCol());
+			strb.append("|").append(entry.getValue()).append(entry.getKey().getRow())
+				.append(",").append(entry.getKey().getCol());
 		}
 		// Return the string
 		return strb.toString();
@@ -180,7 +181,10 @@ public class GameState {
 
 	@Override
 	public boolean equals(Object obj) {
-		return obj instanceof GameState && stringForm.equals(obj.toString());
+		if (this == obj)
+			return true;
+		return obj instanceof GameState &&
+			Objects.equals(stringForm, obj.toString());
 	}
 
 	@Override

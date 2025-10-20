@@ -9,8 +9,8 @@ public class Node {
 		this.moveset = moveset;
         this.previous = previous;
         // key component for guiding A* search algorithm
-		this.fScore = prevPathLength != -1 ? prevPathLength : 0;
-		this.fScore += moveset != null ? getPathLength() + hScore : 0;
+		this.fScore = (prevPathLength != -1 ? prevPathLength : 0) +
+			(moveset != null ? getPathLength() + hScore : 0);
     }
     public GameState getState() {
         return state;
@@ -31,7 +31,7 @@ public class Node {
     private final GameState state;
 	private final Moveset moveset;
     private final Node previous;
-    private int fScore;
+    private final int fScore;
     // computation of backtracking of previous players moves can be done using parent node -> parentNodeState -> parentNodeStatePlayer Position
     // this will be useful when reconstructing the solution path once the goal state is reached
 }

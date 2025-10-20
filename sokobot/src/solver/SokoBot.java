@@ -49,9 +49,9 @@ public class SokoBot {
 			Object[] next = null;
 			Node i = null;
 			// Traverse until solution is found or frontier is empty
-			explored.add(current);
-			while (!isEnd(current) && !frontier.isEmpty()) {
+			do {
 				// Find all possible actions on the current state
+				explored.add(current);
 				actions = Actions(current);
 				for (Moveset m : actions) {
 					// For each possible action, find the succeeding state
@@ -67,9 +67,8 @@ public class SokoBot {
 					current = minimum.getState();
 					// Remove that Node from the frontier and mark its state as explored
 					frontier.remove(minimum);
-					explored.add(current);
 				}
-			}
+			} while (!(isEnd(current) || frontier.isEmpty()));
 			// Concatenate the move sequences found in the connected nodes
 			// from the leaf to the parent
 			i = minimum;
@@ -198,7 +197,7 @@ public class SokoBot {
 			Position statePos = g.getPlayerPos();
 			Position oldPos = m.getMSPlayerPos();
 			Position oldBoxPos = m.getBoxPos();
-			ArrayList<Character> move_sequence = m.getMoveSequence(); // change to String
+			StringBuilder move_sequence = new StringBuilder(m.getMoveSequence());
 			// Declarations for process
 			Position innerPos = null;
 			Position outerPos = null;
@@ -228,16 +227,16 @@ public class SokoBot {
 								newBoxPos = new Position(outerPos.getRow(), outerPos.getCol());
 								switch (innerIndex) {
 									case 0:
-										move_sequence.add('u'); // fix this to append
+										move_sequence.append('u');
 										break;
 									case 4:
-										move_sequence.add('d'); // fix this to append
+										move_sequence.append('d');
 										break;
 									case 8:
-										move_sequence.add('l'); // fix this to append
+										move_sequence.append('l');
 										break;
 									case 12:
-										move_sequence.add('r'); // fix this to append
+										move_sequence.append('r');
 										break;
                                     default:
                                         throw new RuntimeException("Succ(g,m) on state#" + g.hashCode() + ": invalid innerIndex, got " + innerIndex);
@@ -259,7 +258,7 @@ public class SokoBot {
 						//   (this is computed on a separate method)
 						return new Object[] {
 							gnew.isAnyBoxCornered(mapData) ? null : gnew,
-							new Moveset(newBoxPos, newPos, move_sequence), // update to string
+							new Moveset(newBoxPos, newPos, move_sequence.toString()),
 							computeManhattan(newBoxPos)
 						};
 					}
