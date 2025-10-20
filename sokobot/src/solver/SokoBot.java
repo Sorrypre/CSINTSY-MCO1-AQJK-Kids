@@ -32,7 +32,7 @@ public class SokoBot {
 				for (int j = 0; j < width; j++)
 					items[i][j] = itemsData[i][j];
 			
-			this.intialStateItemsData = new GameState(hashCode(), items);
+			this.initialStateItemsData = new GameState(hashCode(), items);
 		}
 		
 		@Override
@@ -48,10 +48,9 @@ public class SokoBot {
 			ArrayList<Moveset> actions = null;
 			Object[] next = null;
 			Node i = null;
-			// Traverse until solution is found or frontier is not empty
+			// Traverse until solution is found or frontier is empty
+			explored.add(current);
 			while (!(isEnd(current) || frontier.isEmpty())) {
-				// Add current state to explored states
-				explored.add(current);
 				// Find all possible actions on the current state
 				actions = Actions(current);
 				for (Moveset m : actions) {
@@ -65,9 +64,10 @@ public class SokoBot {
 				if (!frontier.isEmpty()) {
 					// Assuming the frontier is not empty, find the Node with the least f(n)
 					minimum = Collections.min(frontier, Comparator.comparing(Node::getFScore));
+					current = minimum.getState();
 					// Remove that Node from the frontier and mark its state as explored
 					frontier.remove(minimum);
-					explored.add(minimum.getState());
+					explored.add(current);
 				}
 			}
 			// Concatenate the move sequences found in the connected nodes
@@ -270,6 +270,6 @@ public class SokoBot {
         // may need to be a local variable of the getSolutionAStar method alongside the frontier priority queue
 		private ArrayList<Position> goalTiles = new ArrayList<Position>();
 		private Character[][] mapData;
-		private GameState intialStateItemsData;
+		private GameState initialStateItemsData;
 	}
 }
