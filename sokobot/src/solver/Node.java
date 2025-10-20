@@ -19,7 +19,7 @@ public class Node {
 		return moveset;
 	}
 	public int getPathLength() {
-		return moveset != null ? moveset.getMoveSequence().size() : -1;
+		return moveset != null ? moveset.getMoveSequence().length() : -1;
 	}
     // getter for parent node or the previous state encapsulated in the node (yes di ko na alam )
     public Node getParent() {
@@ -31,7 +31,7 @@ public class Node {
     private final GameState state;
 	private final Moveset moveset;
     private final Node previous;
-    private final int fScore;
+    private int fScore;
     // computation of backtracking of previous players moves can be done using parent node -> parentNodeState -> parentNodeStatePlayer Position
     // this will be useful when reconstructing the solution path once the goal state is reached
 }

@@ -50,7 +50,7 @@ public class SokoBot {
 			Node i = null;
 			// Traverse until solution is found or frontier is empty
 			explored.add(current);
-			while (!(isEnd(current) || frontier.isEmpty())) {
+			while (!isEnd(current) && !frontier.isEmpty()) {
 				// Find all possible actions on the current state
 				actions = Actions(current);
 				for (Moveset m : actions) {
@@ -150,21 +150,40 @@ public class SokoBot {
         }
 
         @Override
-        public ArrayList<Character> Actions(GameState state) {
-            ArrayList<Character> actions = new ArrayList<>(Arrays.asList('u', 'd', 'l', 'r'));
+        public ArrayList<Moveset> Actions(GameState state) {
+            ArrayList <Moveset> possibleMoves = new ArrayList<>();
+            int[] rowInnerVicinity = {-1, 1, 0, 0};
+            int[] colInnerVicinity = {0, 0, -1, 1};
+            int[] rowOppositeVicinity = {1, -1, 0, 0};
+            int[] colOppositeVicinity = {0, 0, 1, -1};
+            BFS_Solver bfs_solver;
+            Position originalplayerPos = state.getPlayerPos();
 
-            // Remove actions that would lead to deadlocks and invalid moves
-            for (Character action : actions) {
-                // first, check the move if it is a valid move
-                if (!isValidMove(state, action)) {
-                    actions.remove(action);
+            for (Map.Entry<Position, Character> entry : state.getItemsPos().entrySet()) {
+                if (entry.getValue().equals('$')) {
+                    for (int i = 0; i < 4; i++) {
+                        Position boxPos = new Position(entry.getKey().getRow() + rowInnerVicinity[i],
+                                entry.getKey().getCol() + colInnerVicinity[i]);
+                        Position playerPos = new Position(entry.getKey().getRow() + rowInnerVicinity[i], entry.getKey().getCol() + colInnerVicinity[i]);
+                        Position targetPushingPos = new Position(entry.getKey().getRow() + rowOppositeVicinity[i],
+                                entry.getKey().getCol() + colOppositeVicinity[i]);
+                        // Check if the player position is not a wall and not occupied by another box
+                        // Also check if the target pushing position is not a wall and not occupied by another box
+                        if (mapData[playerPos.getRow()][playerPos.getCol()] != '#' && state.getItemsPos().getOrDefault(playerPos, ' ') != '$' &&
+                                mapData[targetPushingPos.getRow()][targetPushingPos.getCol()] != '#' && state.getItemsPos().getOrDefault(targetPushingPos, ' ') != '$') {
+                            // Check if the player can reach the position to push the box
+                            bfs_solver = new BFS_Solver(mapData, state.getItemsPos());
+                            String path = bfs_solver.solve(originalplayerPos, playerPos);
+                            if (path != null) {
+                                // Create a new Moveset for this action and add it to the list
+                                possibleMoves.add(new Moveset(boxPos, originalplayerPos, path));
+                            }
+                        }
+                    }
                 }
-                // then, check if the move would lead to a deadlock
-                else if (isDeadlock(state, action)) {
-                    actions.remove(action);
-                }
+
             }
-            return actions;
+            return possibleMoves;
         }
 		
 		// Return value contains:
@@ -179,7 +198,7 @@ public class SokoBot {
 			Position statePos = g.getPlayerPos();
 			Position oldPos = m.getMSPlayerPos();
 			Position oldBoxPos = m.getBoxPos();
-			ArrayList<Character> move_sequence = m.getMoveSequence();
+			ArrayList<Character> move_sequence = m.getMoveSequence(); // change to String
 			// Declarations for process
 			Position innerPos = null;
 			Position outerPos = null;
@@ -208,20 +227,20 @@ public class SokoBot {
 								newPos = new Position(innerPos.getRow(), innerPos.getCol());
 								newBoxPos = new Position(outerPos.getRow(), outerPos.getCol());
 								switch (innerIndex) {
-									default:
-										throw new RuntimeException("Succ(g,m) on state#" + g.hashCode() + ": invalid innerIndex, got " + innerIndex);
 									case 0:
-										move_sequence.add('u');
+										move_sequence.add('u'); // fix this to append
 										break;
 									case 4:
-										move_sequence.add('d');
+										move_sequence.add('d'); // fix this to append
 										break;
 									case 8:
-										move_sequence.add('l');
+										move_sequence.add('l'); // fix this to append
 										break;
 									case 12:
-										move_sequence.add('r');
+										move_sequence.add('r'); // fix this to append
 										break;
+                                    default:
+                                        throw new RuntimeException("Succ(g,m) on state#" + g.hashCode() + ": invalid innerIndex, got " + innerIndex);
 								}
 								succFound = true;
 							}
@@ -240,7 +259,7 @@ public class SokoBot {
 						//   (this is computed on a separate method)
 						return new Object[] {
 							gnew.isAnyBoxCornered(mapData) ? null : gnew,
-							new Moveset(newBoxPos, newPos, move_sequence),
+							new Moveset(newBoxPos, newPos, move_sequence), // update to string
 							computeManhattan(newBoxPos)
 						};
 					}
@@ -260,7 +279,7 @@ public class SokoBot {
 		}
 		
 		private Integer computeManhattan(Position boxPos) {
-			ArrayList<Integer> distances = new ArrayList<Integer>();
+			ArrayList<Integer> distances = new ArrayList<>();
 			for (Position goal : goalTiles)
 				distances.add(Math.abs(boxPos.getCol() - goal.getCol()) +
 					Math.abs(boxPos.getRow() - goal.getRow()));
@@ -268,7 +287,7 @@ public class SokoBot {
 		}
 		
         // may need to be a local variable of the getSolutionAStar method alongside the frontier priority queue
-		private ArrayList<Position> goalTiles = new ArrayList<Position>();
+		private ArrayList<Position> goalTiles = new ArrayList<>();
 		private Character[][] mapData;
 		private GameState initialStateItemsData;
 	}
