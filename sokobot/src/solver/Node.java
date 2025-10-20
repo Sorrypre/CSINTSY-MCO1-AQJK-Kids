@@ -2,11 +2,15 @@ package solver;
 
 public class Node {
     public Node(GameState state, Moveset moveset, Node previous, int hScore) {
+		if (hScore < 0)
+			throw new IllegalArgumentException("hScore cannot be negative");
+		int prevPathLength = previous != null ? previous.getPathLength() : -1;
         this.state = state;
 		this.moveset = moveset;
         this.previous = previous;
         // key component for guiding A* search algorithm
-        this.fScore = previous.getPathLength() + getPathLength() + hScore;
+		this.fScore = prevPathLength != -1 ? prevPathLength : 0;
+		this.fScore += moveset != null ? getPathLength() + hScore : 0;
     }
     public GameState getState() {
         return state;
@@ -15,7 +19,7 @@ public class Node {
 		return moveset;
 	}
 	public int getPathLength() {
-		return moveset.getMoveSequence().size();
+		return moveset != null ? moveset.getMoveSequence().size() : -1;
 	}
     // getter for parent node or the previous state encapsulated in the node (yes di ko na alam )
     public Node getParent() {

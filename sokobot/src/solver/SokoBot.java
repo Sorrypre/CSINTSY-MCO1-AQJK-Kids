@@ -4,7 +4,7 @@ import java.util.*;
 public class SokoBot {
 
 	public String solveSokobanPuzzle(int width, int height, char[][] mapData, char[][] itemsData) {
-		return new SokoBotSequence(width, height, mapData, itemsData).getSolutionAStar();
+		return new SokoBotSequence(width, height, mapData, itemsData).toString();
 	}
 	
 	private class SokoBotSequence implements stateBasedModelFunctions
@@ -35,15 +35,50 @@ public class SokoBot {
 			this.intialStateItemsData = new GameState(hashCode(), items);
 		}
 		
-		public String getSolutionAStar()
+		@Override
+		public String toString()
 		{
-			// Solution to the given Sokoban stage using A* search, etc.
-			// implement frontier using priority queue
-			// implement explored using hash set
-            // use a heuristic function to estimate the cost from the current state to the goal state
-            // use a cost function to estimate the cost from the start state to the current state
-            // return the sequence of actions to reach the goal state
-			return finalSequence;
+			// Declarations
+			HashSet<GameState> explored = new HashSet<GameState>();
+			ArrayList<Node> frontier = new ArrayList<Node>();
+			StringBuilder outcome = new StringBuilder();
+			Node solution_tree = new Node(initialStateItemsData, null, null, 0);
+			Node minimum = solution_tree;
+			GameState current = initialStateItemsData;
+			ArrayList<Moveset> actions = null;
+			Object[] next = null;
+			Node i = null;
+			// Traverse until solution is found or frontier is not empty
+			while (!(isEnd(current) || frontier.isEmpty())) {
+				// Add current state to explored states
+				explored.add(current);
+				// Find all possible actions on the current state
+				actions = Actions(current);
+				for (Moveset m : actions) {
+					// For each possible action, find the succeeding state
+					next = Succ(current, m);
+					// If the next state is both not deadlocked and not explored,
+					// then add the state to the frontier as a new Node
+					if (next[0] != null && !explored.contains(next[0]))
+						frontier.add(new Node(next[0], next[1], minimum, next[2]));
+				}
+				if (!frontier.isEmpty()) {
+					// Assuming the frontier is not empty, find the Node with the least f(n)
+					minimum = Collections.min(frontier, Comparator.comparing(Node::getFScore));
+					// Remove that Node from the frontier and mark its state as explored
+					frontier.remove(minimum);
+					explored.add(minimum.getState());
+				}
+			}
+			// Concatenate the move sequences found in the connected nodes
+			// from the leaf to the parent
+			i = minimum;
+			while (i != null) {
+				outcome.append(new StringBuilder(minimum.getMoveset().getMoveSequence())
+					.reverse().toString());
+				i = i.getParent();
+			}
+			return outcome.reverse().toString();
 		}
 		
 		private SokoBotSequence() {}
@@ -115,7 +150,7 @@ public class SokoBot {
         }
 
         @Override
-        public ArrayList<Character> actions(GameState state) {
+        public ArrayList<Character> Actions(GameState state) {
             ArrayList<Character> actions = new ArrayList<>(Arrays.asList('u', 'd', 'l', 'r'));
 
             // Remove actions that would lead to deadlocks and invalid moves
@@ -233,10 +268,8 @@ public class SokoBot {
 		}
 		
         // may need to be a local variable of the getSolutionAStar method alongside the frontier priority queue
-		private HashSet<String> visited = new HashSet<String>();
 		private ArrayList<Position> goalTiles = new ArrayList<Position>();
 		private Character[][] mapData;
 		private GameState intialStateItemsData;
-		private String finalSequence = "";
 	}
 }
