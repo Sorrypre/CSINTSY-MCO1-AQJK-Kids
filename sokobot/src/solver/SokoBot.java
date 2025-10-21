@@ -49,9 +49,9 @@ public class SokoBot {
 			Object[] next = null;
 			Node i = null;
 			// Traverse until solution is found or frontier is empty
+			explored.add(current);
 			do {
 				// Find all possible actions on the current state
-				explored.add(current);
 				actions = Actions(current);
 				for (Moveset m : actions) {
 					// For each possible action, find the succeeding state
@@ -67,6 +67,7 @@ public class SokoBot {
 					current = minimum.getState();
 					// Remove that Node from the frontier and mark its state as explored
 					frontier.remove(minimum);
+					explored.add(minimum);
 				}
 			} while (!(isEnd(current) || frontier.isEmpty()));
 			// Concatenate the move sequences found in the connected nodes
