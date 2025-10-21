@@ -37,8 +37,11 @@ public class GameState {
 
 	public GameState getCopy(Character[][] map) {
 		Character[][] itemData = new Character[map.length][];
-		for (Character[] row : itemData)
-			Arrays.fill(row, ' ');
+		for (int i = 0; i < map.length; i++) {
+			itemData[i] = new Character[map[i].length];
+			for (int j = 0; j < map[i].length; j++)
+				itemData[i][j] = ' ';
+		}
 		for (Map.Entry<Position, Character> entry : itemsMap.entrySet())
 			itemData[entry.getKey().getRow()][entry.getKey().getCol()] = entry.getValue();
 		return new GameState(sequenceHash, itemData);
