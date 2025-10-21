@@ -49,8 +49,9 @@ public class SokoBot {
 			Object[] next = null;
 			Node i = null;
 			// Traverse until solution is found or frontier is empty
-			explored.add(current);
 			do {
+				// Add current game state to explored states
+				explored.add(current);
 				// Find all possible actions on the current state
 				actions = Actions(current);
 				for (Moveset m : actions) {
@@ -64,10 +65,11 @@ public class SokoBot {
 				if (!frontier.isEmpty()) {
 					// Assuming the frontier is not empty, find the Node with the least f(n)
 					minimum = Collections.min(frontier, Comparator.comparing(Node::getFScore));
+					// Assign the state of the minimum to current so that it will be added to
+					// the explored list when the loop repeats
 					current = minimum.getState();
-					// Remove that Node from the frontier and mark its state as explored
+					// Remove that Node from the frontier
 					frontier.remove(minimum);
-					explored.add(minimum);
 				}
 			} while (!(isEnd(current) || frontier.isEmpty()));
 			// Concatenate the move sequences found in the connected nodes
