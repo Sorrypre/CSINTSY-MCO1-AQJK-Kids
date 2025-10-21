@@ -177,14 +177,14 @@ public class SokoBot {
 		private Node search() {
 			PriorityQueue<Node> frontier = new PriorityQueue<>(Comparator.comparingInt(Node::getFScore));
 			HashSet<GameState> explored = new HashSet<>();
-			ArrayList<Moveset> actions;
 			Node current = new Node(initialStateItemsData, null, null);
+			ArrayList<Moveset> actions;
 			Object[] succ;
 			frontier.add(current);
 			while (!frontier.isEmpty()) {
 				current = frontier.poll();
 				if (isEnd(current.getState()))
-					return current;
+					break;
 				explored.add(current.getState());
 				actions = Actions(current.getState());
 				for (Moveset m : actions) {
@@ -193,7 +193,7 @@ public class SokoBot {
 						frontier.add(new Node((GameState)succ[0], (Moveset)succ[1], current));
 				}
 			}
-			return null;
+			return current;
 		}
 		
 		private SokoBotSequence() {}
