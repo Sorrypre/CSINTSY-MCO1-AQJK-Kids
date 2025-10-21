@@ -1,6 +1,7 @@
 package solver;
 
 import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -12,6 +13,7 @@ import java.util.Objects;
  */
 public class GameState {
     private final Map<Position, Character> itemsMap = new HashMap<>();
+	private ArrayList<Position> goalTiles;
 	private int sequenceHash;
 	private String stringForm;
 
@@ -22,7 +24,8 @@ public class GameState {
 	}
 
 	/* Constructor to convert given char[][] to a state */
-	public GameState(int sequenceHash, Character[][] items) {
+	public GameState(int sequenceHash, Character[][] items, ArrayList<Position> goalTiles) {
+		this.goalTiles = goalTiles;
 		this.sequenceHash = sequenceHash;
 		for (int i = 0; i < items.length; i++)
 			for(int j = 0; j < items[i].length; j++)
@@ -44,7 +47,7 @@ public class GameState {
 		}
 		for (Map.Entry<Position, Character> entry : itemsMap.entrySet())
 			itemData[entry.getKey().getRow()][entry.getKey().getCol()] = entry.getValue();
-		return new GameState(sequenceHash, itemData);
+		return new GameState(sequenceHash, itemData, goalTiles);
 	}
 
 	public HashMap<Position, Character> getItemsPos() {
@@ -56,6 +59,19 @@ public class GameState {
         // If the position is not in the map, return a space character
         return itemsMap.getOrDefault(pos, ' ');
     }
+	
+	public Integer getManhattan() {
+		Position playerPos = getPlayerPos();
+		int manh = 0;
+		for (Position goal : goalTiles)
+			 for (Map.Entry<Position, Character> entry : itemsMap.entrySet())
+				 if (entry.getValue().equals('$'))
+					 manh += Math.abs(entry.getKey().getRow() - goal.getRow()) +
+						Math.abs(entry.getKey().getCol() - goal.getCol()) +
+						Math.abs(entry.getKey().getRow() - playerPos.getCol()) +
+						Math.abs(entry.getKey().getCol() - playerPos.getCol());
+		return manh;
+	}
 	
     public void setItem(int row, int col, Character item) {
         Position pos = new Position (row, col);
@@ -195,4 +211,6 @@ public class GameState {
 		// The hash of this class will come from its string form
 		return Objects.hashCode(stringForm);
 	}
+	
+	
 }

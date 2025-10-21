@@ -24,6 +24,6 @@ public class BFS_Node {
         if (this == o) return true; //same memory reference
         if (o == null || getClass() != o.getClass()) return false;
         BFS_Node BFSNode = (BFS_Node) o;
-        return position.equals(BFSNode.position); //same content
+        return position.equals(BFSNode.getPosition()); //same content
     }
 }

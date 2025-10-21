@@ -47,12 +47,13 @@ public class SokoBot {
 				for (int j = 0; j < width; j++)
 					items[i][j] = itemsData[i][j];
 			
-			this.initialStateItemsData = new GameState(hashCode(), items);
+			this.initialStateItemsData = new GameState(hashCode(), items, goalTiles);
 		}
+		
 		/*
 		    * toString method that implements the A* search algorithm to find the solution
 		    * returns the solution as a string of moves
-		 */
+		
 		@Override
 		public String toString()
 		{
@@ -77,12 +78,14 @@ public class SokoBot {
 					next = Succ(current, m);
 					// If the next state is both not deadlocked and not explored,
 					// then add the state to the frontier as a new Node
+					//System.out.println((GameState)next[0] != null);
+					//System.out.println(!explored.contains((GameState)next[0]));
 					if ((GameState)next[0] != null && !explored.contains((GameState)next[0]))
 						frontier.add(new Node((GameState)next[0], (Moveset)next[1], minimum, (Integer)next[2]));
 				}
 				if (!frontier.isEmpty()) {
 					// Assuming the frontier is not empty, find the Node with the least f(n)
-					minimum = Collections.min(frontier, Comparator.comparing(Node::getFScore));
+					minimum = Collections.min(frontier, Comparator.comparingInt(Node::getFScore));
 					// Assign the state of the minimum to current so that it will be added to
 					// the explored list when the loop repeats
 					current = minimum.getState();
@@ -94,59 +97,106 @@ public class SokoBot {
 			// from the leaf to the parent
 			i = minimum;
 			while (i != null) {
-				outcome.append(new StringBuilder(minimum.getMoveset().getMoveSequence())
-					.reverse().toString());
+				if (i.getMoveset() != null)
+					outcome.append(new StringBuilder(i.getMoveset().getMoveSequence())
+						.reverse().toString());
 				i = i.getParent();
 			}
+			System.out.println(outcome.reverse().toString());
 			return outcome.reverse().toString();
+		}
+		*/
+		
+		/*
+		@Override
+		public String toString() {
+			StringBuilder outcome = new StringBuilder();
+			PriorityQueue<Node> frontier = new PriorityQueue<>(Comparator.comparing(Node::getFScore));
+			HashSet<GameState> explored = new HashSet<>();
+			Node solution_tree = new Node(initialStateItemsData, null, null, goalTiles);
+			Node current = solution_tree;
+			Node next;
+			GameState current_state;
+			Object[] next_state;
+			ArrayList<Moveset> actions;
+			Node i;
+			frontier.add(current);
+			while (!frontier.isEmpty()) {
+				current = frontier.poll();
+				current_state = current.getState();
+				explored.add(current_state);
+				if (isEnd(current_state)) {
+					break;
+				} else {
+					actions = Actions(current_state);
+					for (Moveset m : actions) {
+						next_state = Succ(current_state, m);
+						System.out.println((GameState)next_state[0] != null);
+						System.out.println(!explored.contains((GameState)next_state[0]));
+						if ((GameState)next_state[0] != null && !explored.contains((GameState)next_state[0])) {
+							next = new Node((GameState)next_state[0], (Moveset)next_state[1], current, goalTiles);
+							if (current_state.equals(initialStateItemsData) || next.getFScore() < current.getFScore())
+								frontier.add(next);
+						}
+					}
+				}
+			}
+			// Concatenate the move sequences found in the connected nodes
+			// from the leaf to the parent
+			i = current;
+			while (i != null) {
+				if (i.getMoveset() != null) {
+					outcome.append(new StringBuilder(i.getMoveset().getMoveSequence())
+						.reverse().toString());
+				}
+				i = i.getParent();
+			}
+			return outcome.toString();
+		}
+		*/
+		
+		@Override
+		public String toString() {
+			return compute();
+		}
+		
+		private String compute() {
+			StringBuilder result = new StringBuilder();
+			Node leaf = search();
+			Node i;
+			if (leaf != null) {
+				i = leaf;
+				while (i != null) {
+					result.insert(0, i.getMSSequence());
+					i = i.getParent();
+				}
+			}
+			return result.toString();
+		}
+		
+		private Node search() {
+			PriorityQueue<Node> frontier = new PriorityQueue<>(Comparator.comparingInt(Node::getFScore));
+			HashSet<GameState> explored = new HashSet<>();
+			ArrayList<Moveset> actions;
+			Node current = new Node(initialStateItemsData, null, null);
+			Object[] succ;
+			frontier.add(current);
+			while (!frontier.isEmpty()) {
+				current = frontier.poll();
+				if (isEnd(current.getState()))
+					return current;
+				explored.add(current.getState());
+				actions = Actions(current.getState());
+				for (Moveset m : actions) {
+					succ = Succ((GameState)current.getState(), m);
+					if ((GameState)succ[0] != null && !explored.contains((GameState)succ[0]))
+						frontier.add(new Node((GameState)succ[0], (Moveset)succ[1], current));
+				}
+			}
+			return null;
 		}
 		
 		private SokoBotSequence() {}
-
-//        private boolean isValidMove(GameState state, Character move) {
-//            // Check if the move is valid based on the current state and mapData
-//            Position playerPos = state.getPlayerPos();
-//            Position movePos;
-//            int moveNumerical;
-//
-//            // convert move character to vicinity coordinate
-//            switch (move) {
-//                case 'U':
-//                    moveNumerical = 0;
-//                    movePos = (Position)state.getPlayerVicinityData()[moveNumerical];
-//                    break;
-//                case 'D':
-//                    moveNumerical = 4;
-//                    movePos = (Position)state.getPlayerVicinityData()[moveNumerical];
-//                    break;
-//                case 'L':
-//                    moveNumerical = 8;
-//                    movePos = (Position)state.getPlayerVicinityData()[moveNumerical];
-//                    break;
-//                case 'R':
-//                    moveNumerical = 12;
-//                    movePos = (Position)state.getPlayerVicinityData()[moveNumerical];
-//                    break;
-//                default:
-//                    return false; // Invalid move character
-//            }
-//
-//            // Check if the move is within bounds and not into a wall
-//            if (mapData[movePos.getRow()][movePos.getCol()] == '#') {
-//                return false; // Wall
-//            }
-//
-//            // Check if pushing a box is valid
-//            if (state.getPlayerVicinityData()[moveNumerical + 1].equals('$')) { // If there's a box in the direction of the move
-//                // Check if the space beyond the box is free (not a wall or another box)
-//                Position outerVicinity = ((Position)state.getPlayerVicinityData()[moveNumerical + 2]);
-//                return mapData[outerVicinity.getRow()][outerVicinity.getCol()] != '#'
-//                        && !state.getPlayerVicinityData()[moveNumerical + 3].equals('$'); // Can't push the box because there's a wall or another box
-//            }
-//
-//            // Return true if the move is valid
-//            return true;
-//        }
 
         private GameState isDeadlock(GameState state) {
             return state.isAnyBoxCornered(mapData) ? state : null;
@@ -179,8 +229,7 @@ public class SokoBot {
             for (Map.Entry<Position, Character> entry : state.getItemsPos().entrySet()) {
                 if (entry.getValue().equals('$')) {
                     for (int i = 0; i < 4; i++) {
-                        Position boxPos = new Position(entry.getKey().getRow() + rowInnerVicinity[i],
-                                entry.getKey().getCol() + colInnerVicinity[i]);
+                        Position boxPos = new Position(entry.getKey().getRow(), entry.getKey().getCol());
                         Position playerPos = new Position(entry.getKey().getRow() + rowInnerVicinity[i], entry.getKey().getCol() + colInnerVicinity[i]);
                         Position targetPushingPos = new Position(entry.getKey().getRow() + rowOppositeVicinity[i],
                                 entry.getKey().getCol() + colOppositeVicinity[i]);
@@ -193,7 +242,7 @@ public class SokoBot {
                             String path = bfs_solver.solve(originalplayerPos, playerPos);
                             if (path != null) {
                                 // Create a new Moveset for this action and add it to the list
-                                possibleMoves.add(new Moveset(boxPos, originalplayerPos, path));
+                                possibleMoves.add(new Moveset(boxPos, playerPos, path));
                             }
                         }
                     }
@@ -225,7 +274,8 @@ public class SokoBot {
 			boolean succFound = false;
 			int innerIndex = 0;
 			// Verify state by checking if player position in the given Moveset is not pointing to a wall
-			if (gnew.getItem(oldPos.getRow(), oldPos.getCol()).equals(' ') && !mapData[oldPos.getRow()][oldPos.getCol()].equals('#')) {
+			if ((gnew.getItem(oldPos.getRow(), oldPos.getCol()).equals(' ') || gnew.getItem(oldPos.getRow(), oldPos.getCol()).equals('@'))
+					&& !mapData[oldPos.getRow()][oldPos.getCol()].equals('#')) {
 				// Move player on copy state
 				gnew.removeItem(statePos.getRow(), statePos.getCol());
 				gnew.setItem(oldPos.getRow(), oldPos.getCol(), '@');
@@ -275,9 +325,8 @@ public class SokoBot {
 						// - Manhattan distance between the box of the new state and the goal tile in the mapData
 						//   (this is computed on a separate method)
 						return new Object[] {
-                                isDeadlock(gnew),
-							new Moveset(newBoxPos, newPos, move_sequence.toString()),
-							computeManhattan(newBoxPos)
+                            gnew.isAnyBoxCornered(mapData) ? gnew : null,
+							new Moveset(newBoxPos, newPos, move_sequence.toString())
 						};
 					}
 					else
@@ -292,15 +341,7 @@ public class SokoBot {
 			else
 				// Error handling in case of a mistake somewhere else
 				throw new RuntimeException("Succ(g,m) on state#" + g.hashCode() + ": row " + oldPos.getRow() +
-					" col " + oldPos.getCol() + " is not vacant");
-		}
-		
-		private Integer computeManhattan(Position boxPos) {
-			ArrayList<Integer> distances = new ArrayList<>();
-			for (Position goal : goalTiles)
-				distances.add(Math.abs(boxPos.getCol() - goal.getCol()) +
-					Math.abs(boxPos.getRow() - goal.getRow()));
-			return Collections.max(distances);
+					" col " + oldPos.getCol() + " is not vacant, found " + g.getItem(oldPos.getRow(), oldPos.getCol()));
 		}
 		
         // may need to be a local variable of the getSolutionAStar method alongside the frontier priority queue
