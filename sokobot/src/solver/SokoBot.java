@@ -1,14 +1,29 @@
 package solver;
 import java.util.*;
 
+/*
+ * SokoBot class that solves Sokoban puzzles using A* search algorithm
+ *  used for integrating with the Sokoban framework provided solveSokobanPuzzle method
+ *  creates a SokoBotSequence instance to handle the puzzle solving logic
+ */
 public class SokoBot {
-
+    // Main method to solve Sokoban puzzle that takes width, height, mapData, and itemsData as parameters
 	public String solveSokobanPuzzle(int width, int height, char[][] mapData, char[][] itemsData) {
 		return new SokoBotSequence(width, height, mapData, itemsData).toString();
 	}
-	
+	/*
+	 * SokoBotSequence class that implements stateBasedModelFunctions interface
+	 * handles the puzzle solving logic using A* search algorithm
+	 * initializes mapData and goalTiles based on the provided mapData
+	 * initializes the initial game state based on the provided itemsData using GameState class
+	 */
 	private class SokoBotSequence implements stateBasedModelFunctions
 	{
+        /*
+         * Constructor that initializes mapData, goalTiles, and initialStateItemsData
+         *  takes width, height, mapData, and itemsData as parameters
+         *  throws IllegalArgumentException if mapData or itemsData is null
+         */
 		public SokoBotSequence(int width, int height, char[][] mapData, char[][] itemsData)
 		{
 			if (null == mapData || null == itemsData)
@@ -34,13 +49,16 @@ public class SokoBot {
 			
 			this.initialStateItemsData = new GameState(hashCode(), items);
 		}
-		
+		/*
+		    * toString method that implements the A* search algorithm to find the solution
+		    * returns the solution as a string of moves
+		 */
 		@Override
 		public String toString()
 		{
 			// Declarations
-			HashSet<GameState> explored = new HashSet<GameState>();
-			ArrayList<Node> frontier = new ArrayList<Node>();
+			HashSet<GameState> explored = new HashSet<>();
+			ArrayList<Node> frontier = new ArrayList<>();
 			StringBuilder outcome = new StringBuilder();
 			Node solution_tree = new Node(initialStateItemsData, null, null, 0);
 			Node minimum = solution_tree;
@@ -130,11 +148,8 @@ public class SokoBot {
             return true;
         }
 
-        private boolean isDeadlock(GameState state, Character move) {
-            // Check for simple deadlocks: box in a corner not on a goal
-            // Check for more complex deadlocks: boxes against walls or other boxes in a way that makes it impossible to move them to goals
-            // Return true if a deadlock is detected, false otherwise
-            return false; // Placeholder return value
+        private GameState isDeadlock(GameState state) {
+            return state.isAnyBoxCornered(mapData) ? state : null;
         }
 
         /*  ----------------------------------------------------------------
@@ -260,7 +275,7 @@ public class SokoBot {
 						// - Manhattan distance between the box of the new state and the goal tile in the mapData
 						//   (this is computed on a separate method)
 						return new Object[] {
-							gnew.isAnyBoxCornered(mapData) ? null : gnew,
+                                isDeadlock(gnew),
 							new Moveset(newBoxPos, newPos, move_sequence.toString()),
 							computeManhattan(newBoxPos)
 						};

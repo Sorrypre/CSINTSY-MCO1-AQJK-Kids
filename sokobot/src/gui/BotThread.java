@@ -1,9 +1,9 @@
 package gui;
 
-import solver.SokoBotOld;
+import solver.SokoBot;
 
 public class BotThread extends Thread {
-  private SokoBotOld sokoBot;
+  private SokoBot sokoBot;
   private int width;
   private int height;
   private char[][] mapData;
@@ -12,7 +12,7 @@ public class BotThread extends Thread {
   private String solution = null;
 
   public BotThread(int width, int height, char[][] mapData, char[][] itemsData) {
-    sokoBot = new SokoBotOld();
+    sokoBot = new SokoBot();
     this.width = width;
     this.height = height;
     this.mapData = mapData;
