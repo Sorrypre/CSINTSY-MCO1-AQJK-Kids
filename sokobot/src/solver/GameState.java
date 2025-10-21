@@ -27,7 +27,7 @@ public class GameState {
 		for (int i = 0; i < items.length; i++)
 			for(int j = 0; j < items[i].length; j++)
 				// Add to itemsMap when the object is a box or a player
-				if ('$' == items[i][j] || '@' == items[i][j])
+				if (items[i][j].equals('$') || items[i][j].equals('@'))
 					setItem(i, j, items[i][j]);
 		if (getPlayerPos() == null)
 			throw new NullPointerException("No player found on the given item data");
@@ -59,7 +59,7 @@ public class GameState {
 	
     public void setItem(int row, int col, Character item) {
         Position pos = new Position (row, col);
-        if (item == ' ') {
+        if (item.equals(' ')) {
             itemsMap.remove(pos);// Remove the entry if the item is a space
         }
         else itemsMap.put(pos, item);
@@ -79,7 +79,7 @@ public class GameState {
 		Character[] vicinity;
 		for (Map.Entry<Position, Character> entry : itemsMap.entrySet()) {
 			// Deadlock only happens when the box is not on a goal tile
-			if (entry.getValue() == '$' && map[entry.getKey().getRow()][entry.getKey().getCol()] != '.') {
+			if (entry.getValue().equals('$') && !map[entry.getKey().getRow()][entry.getKey().getCol()].equals('.')) {
 				// Get map characters on the box's vicinity as follows:
 				//      [0;1]
 				//  [4;5] $ [6;7]
@@ -96,8 +96,8 @@ public class GameState {
 				vicinity[6] = map[entry.getKey().getRow()][entry.getKey().getCol() + 1];
 				vicinity[7] = getItem(entry.getKey().getRow(), entry.getKey().getCol() + 1);
 				// Check if there is a box or a wall adjacent to [0] or [1]
-				if ((vicinity[0] == '#' || vicinity[1] == '$' || vicinity[2] == '#' || vicinity[3] == '$') &&
-					(vicinity[4] == '#' || vicinity[5] == '$' || vicinity[6] == '#' || vicinity[7] == '$'))
+				if ((vicinity[0].equals('#') || vicinity[1].equals('$') || vicinity[2].equals('#') || vicinity[3].equals('$')) &&
+					(vicinity[4].equals('#') || vicinity[5].equals('$') || vicinity[6].equals('#') || vicinity[7].equals('$')))
 					return true;
 				else
 					vicinity = null;
@@ -110,7 +110,7 @@ public class GameState {
 		int counter = 0;
 		if (map != null)
 			for (Map.Entry<Position, Character> entry : itemsMap.entrySet())
-				if ('$' == entry.getValue() && '.' == map[entry.getKey().getRow()][entry.getKey().getCol()])
+				if (entry.getValue().equals('$') && map[entry.getKey().getRow()][entry.getKey().getCol()].equals('.'))
 					counter++;
 		return map != null && expectedBoxes != null && expectedBoxes == counter;
 	}

@@ -37,10 +37,6 @@ public class BFS_Solver {
 
         while (!frontier.isEmpty()) {
             currentBFSNode = frontier.poll();
-            System.out.println("Current Node Position: (" + currentBFSNode.getPosition().getRow() + ", " + currentBFSNode.getPosition().getCol() + ")");
-            if (currentBFSNode.getParent() != null)
-                System.out.println("Player parent Position: (" + currentBFSNode.getParent().getPosition().getRow() + ", " + currentBFSNode.getParent().getPosition().getCol() + ")");
-            System.out.println("Goal Position: (" + adjBoxPos.getRow() + ", " + adjBoxPos.getCol() + ")");
             if (currentBFSNode.getPosition().equals(adjBoxPos)) {
                 reachedGoal = true;
             }
@@ -62,7 +58,7 @@ public class BFS_Solver {
     public void exploreNeighborNodes(BFS_Node currentBFSNode) {
         // Up, Down, Left, Right
 
-        int[] directionsRow = {-1, 1, 0, 0}; //
+        int[] directionsRow = {-1, 1, 0, 0};
         int[] directionsCol = {0, 0, -1, 1};
         int newRow, newCol;
         for (int i = 0; i < 4; i++) {
@@ -70,7 +66,7 @@ public class BFS_Solver {
             newCol = currentBFSNode.getPosition().getCol() + directionsCol[i];
 
             if (newRow >= 0 && newCol >= 0 && newRow < mapHeight && newCol < mapWidth
-                    && !explored[newRow][newCol] && mapData[newRow][newCol] != '#' && itemsData.getOrDefault(currentBFSNode.getPosition(), ' ') != '$') {
+                    && !explored[newRow][newCol] && !mapData[newRow][newCol].equals('#') && !itemsData.getOrDefault(currentBFSNode.getPosition(), ' ').equals('$')) {
                 frontier.offer(new BFS_Node(newRow, newCol, currentBFSNode));
                 explored[newRow][newCol] = true;
                 nodesInNextLayer++;

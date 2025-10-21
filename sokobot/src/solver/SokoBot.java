@@ -103,50 +103,50 @@ public class SokoBot {
 		
 		private SokoBotSequence() {}
 
-        private boolean isValidMove(GameState state, Character move) {
-            // Check if the move is valid based on the current state and mapData
-            Position playerPos = state.getPlayerPos();
-            Position movePos;
-            int moveNumerical;
-
-            // convert move character to vicinity coordinate
-            switch (move) {
-                case 'U':
-                    moveNumerical = 0;
-                    movePos = (Position)state.getPlayerVicinityData()[moveNumerical];
-                    break;
-                case 'D':
-                    moveNumerical = 4;
-                    movePos = (Position)state.getPlayerVicinityData()[moveNumerical];
-                    break;
-                case 'L':
-                    moveNumerical = 8;
-                    movePos = (Position)state.getPlayerVicinityData()[moveNumerical];
-                    break;
-                case 'R':
-                    moveNumerical = 12;
-                    movePos = (Position)state.getPlayerVicinityData()[moveNumerical];
-                    break;
-                default:
-                    return false; // Invalid move character
-            }
-
-            // Check if the move is within bounds and not into a wall
-            if (mapData[movePos.getRow()][movePos.getCol()] == '#') {
-                return false; // Wall
-            }
-
-            // Check if pushing a box is valid
-            if (state.getPlayerVicinityData()[moveNumerical + 1].equals('$')) { // If there's a box in the direction of the move
-                // Check if the space beyond the box is free (not a wall or another box)
-                Position outerVicinity = ((Position)state.getPlayerVicinityData()[moveNumerical + 2]);
-                return mapData[outerVicinity.getRow()][outerVicinity.getCol()] != '#'
-                        && !state.getPlayerVicinityData()[moveNumerical + 3].equals('$'); // Can't push the box because there's a wall or another box
-            }
-
-            // Return true if the move is valid
-            return true;
-        }
+//        private boolean isValidMove(GameState state, Character move) {
+//            // Check if the move is valid based on the current state and mapData
+//            Position playerPos = state.getPlayerPos();
+//            Position movePos;
+//            int moveNumerical;
+//
+//            // convert move character to vicinity coordinate
+//            switch (move) {
+//                case 'U':
+//                    moveNumerical = 0;
+//                    movePos = (Position)state.getPlayerVicinityData()[moveNumerical];
+//                    break;
+//                case 'D':
+//                    moveNumerical = 4;
+//                    movePos = (Position)state.getPlayerVicinityData()[moveNumerical];
+//                    break;
+//                case 'L':
+//                    moveNumerical = 8;
+//                    movePos = (Position)state.getPlayerVicinityData()[moveNumerical];
+//                    break;
+//                case 'R':
+//                    moveNumerical = 12;
+//                    movePos = (Position)state.getPlayerVicinityData()[moveNumerical];
+//                    break;
+//                default:
+//                    return false; // Invalid move character
+//            }
+//
+//            // Check if the move is within bounds and not into a wall
+//            if (mapData[movePos.getRow()][movePos.getCol()] == '#') {
+//                return false; // Wall
+//            }
+//
+//            // Check if pushing a box is valid
+//            if (state.getPlayerVicinityData()[moveNumerical + 1].equals('$')) { // If there's a box in the direction of the move
+//                // Check if the space beyond the box is free (not a wall or another box)
+//                Position outerVicinity = ((Position)state.getPlayerVicinityData()[moveNumerical + 2]);
+//                return mapData[outerVicinity.getRow()][outerVicinity.getCol()] != '#'
+//                        && !state.getPlayerVicinityData()[moveNumerical + 3].equals('$'); // Can't push the box because there's a wall or another box
+//            }
+//
+//            // Return true if the move is valid
+//            return true;
+//        }
 
         private GameState isDeadlock(GameState state) {
             return state.isAnyBoxCornered(mapData) ? state : null;
@@ -186,8 +186,8 @@ public class SokoBot {
                                 entry.getKey().getCol() + colOppositeVicinity[i]);
                         // Check if the player position is not a wall and not occupied by another box
                         // Also check if the target pushing position is not a wall and not occupied by another box
-                        if (mapData[playerPos.getRow()][playerPos.getCol()] != '#' && state.getItemsPos().getOrDefault(playerPos, ' ') != '$' &&
-                                mapData[targetPushingPos.getRow()][targetPushingPos.getCol()] != '#' && state.getItemsPos().getOrDefault(targetPushingPos, ' ') != '$') {
+                        if (!mapData[playerPos.getRow()][playerPos.getCol()].equals('#') && !state.getItemsPos().getOrDefault(playerPos, ' ').equals('$') &&
+                                !mapData[targetPushingPos.getRow()][targetPushingPos.getCol()].equals('#') && !state.getItemsPos().getOrDefault(targetPushingPos, ' ').equals('$')) {
                             // Check if the player can reach the position to push the box
                             bfs_solver = new BFS_Solver(mapData, state.getItemsPos());
                             String path = bfs_solver.solve(originalplayerPos, playerPos);
@@ -225,19 +225,19 @@ public class SokoBot {
 			boolean succFound = false;
 			int innerIndex = 0;
 			// Verify state by checking if player position in the given Moveset is not pointing to a wall
-			if (gnew.getItem(oldPos.getRow(), oldPos.getCol()) == ' ' && mapData[oldPos.getRow()][oldPos.getCol()] != '#') {
+			if (gnew.getItem(oldPos.getRow(), oldPos.getCol()).equals(' ') && !mapData[oldPos.getRow()][oldPos.getCol()].equals('#')) {
 				// Move player on copy state
 				gnew.removeItem(statePos.getRow(), statePos.getCol());
 				gnew.setItem(oldPos.getRow(), oldPos.getCol(), '@');
 				// Verify state by checking if box position in the given Moveset is indeed a box
-				if (gnew.getItem(oldBoxPos.getRow(), oldBoxPos.getCol()) == '$') {
+				if (gnew.getItem(oldBoxPos.getRow(), oldBoxPos.getCol()).equals('$')) {
 					playerVicinityData = gnew.getPlayerVicinityData();
 					// Test each direction and push wherever oldBoxPos matches
 					do {
 						innerPos = (Position)playerVicinityData[innerIndex];
 						outerPos = (Position)playerVicinityData[innerIndex + 2];
-						if (innerPos.equals(oldBoxPos) && gnew.getItem(outerPos.getRow(), outerPos.getCol()) == ' ') {
-							if (mapData[outerPos.getRow()][outerPos.getCol()] != '#') {
+						if (innerPos.equals(oldBoxPos) && gnew.getItem(outerPos.getRow(), outerPos.getCol()).equals(' ')) {
+							if (!mapData[outerPos.getRow()][outerPos.getCol()].equals('#')) {
 								gnew.setItem(outerPos.getRow(), outerPos.getCol(), '$');
 								gnew.setItem(innerPos.getRow(), innerPos.getCol(), '@');
 								gnew.removeItem(oldPos.getRow(), oldPos.getCol());
