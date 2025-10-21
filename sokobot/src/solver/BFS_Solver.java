@@ -49,7 +49,7 @@ public class BFS_Solver {
                     moveCount++;
             }
             if (reachedGoal) {
-                System.out.println("BFS Solved in " + moveCount + " moves.");
+                //System.out.println("BFS Solved in " + moveCount + " moves.");
                 return backTrackPath(currentBFSNode);
             }
         }

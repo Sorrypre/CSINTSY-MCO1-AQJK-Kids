@@ -59,19 +59,30 @@ public class GameState {
         // If the position is not in the map, return a space character
         return itemsMap.getOrDefault(pos, ' ');
     }
-	
-	public Integer getManhattan() {
-		Position playerPos = getPlayerPos();
-		int manh = 0;
-		for (Position goal : goalTiles)
-			 for (Map.Entry<Position, Character> entry : itemsMap.entrySet())
-				 if (entry.getValue().equals('$'))
-					 manh += Math.abs(entry.getKey().getRow() - goal.getRow()) +
-						Math.abs(entry.getKey().getCol() - goal.getCol()) +
-						Math.abs(entry.getKey().getRow() - playerPos.getCol()) +
-						Math.abs(entry.getKey().getCol() - playerPos.getCol());
-		return manh;
-	}
+
+    public Integer getManhattan() {
+        if (goalTiles == null || goalTiles.isEmpty())
+            return 0;
+
+        int manh = 0;
+        for (Map.Entry<Position, Character> entry : itemsMap.entrySet()) {
+            if (!entry.getValue().equals('$'))
+                continue;
+            int boxRow = entry.getKey().getRow();
+            int boxCol = entry.getKey().getCol();
+
+            int minDist = Integer.MAX_VALUE;
+            for (Position goal : goalTiles) {
+                int dist = Math.abs(boxRow - goal.getRow()) + Math.abs(boxCol - goal.getCol());
+                if (dist < minDist) minDist = dist;
+                if (minDist == 0) break; // can't get better than this
+            }
+            if (minDist == Integer.MAX_VALUE) minDist = 0;
+            manh += minDist;
+        }
+        return manh;
+    }
+
 	
     public void setItem(int row, int col, Character item) {
         Position pos = new Position (row, col);
@@ -91,37 +102,38 @@ public class GameState {
 	
 	// Matches Wall-Wall, Wall-Box, Box-Box deadlock for each box
 	public boolean isAnyBoxCornered(Character[][] map) {
-		// Iterate through itemsMap
-		Character[] vicinity;
-		for (Map.Entry<Position, Character> entry : itemsMap.entrySet()) {
-			// Deadlock only happens when the box is not on a goal tile
-			if (entry.getValue().equals('$') && !map[entry.getKey().getRow()][entry.getKey().getCol()].equals('.')) {
-				// Get map characters on the box's vicinity as follows:
-				//      [0;1]
-				//  [4;5] $ [6;7]
-				//      [2;3]
-				// * Even numbers 0,2,4,6 checks the given map parameter
-				// * Odd numbers 1,3,5,7 checks the instance itemsData
-				vicinity = new Character[8];
-				vicinity[0] = map[entry.getKey().getRow() - 1][entry.getKey().getCol()];
-				vicinity[1] = getItem(entry.getKey().getRow() - 1, entry.getKey().getCol());
-				vicinity[2] = map[entry.getKey().getRow() + 1][entry.getKey().getCol()];
-				vicinity[3] = getItem(entry.getKey().getRow() + 1, entry.getKey().getCol());
-				vicinity[4] = map[entry.getKey().getRow()][entry.getKey().getCol() - 1];
-				vicinity[5] = getItem(entry.getKey().getRow(), entry.getKey().getCol() - 1);
-				vicinity[6] = map[entry.getKey().getRow()][entry.getKey().getCol() + 1];
-				vicinity[7] = getItem(entry.getKey().getRow(), entry.getKey().getCol() + 1);
-				// Check if there is a box or a wall adjacent to [0] or [1]
-				if ((vicinity[0].equals('#') || vicinity[1].equals('$') || vicinity[2].equals('#') || vicinity[3].equals('$')) &&
-					(vicinity[4].equals('#') || vicinity[5].equals('$') || vicinity[6].equals('#') || vicinity[7].equals('$')))
-					return true;
-				else
-					vicinity = null;
-			}
-		}
-		return false;
-	}
-	
+        // Iterate through itemsMap
+        Character[] vicinity;
+        for (Map.Entry<Position, Character> entry : itemsMap.entrySet()) {
+            // only boxes
+            if (!entry.getValue().equals('$')) continue;
+            int row = entry.getKey().getRow();
+            int col = entry.getKey().getCol();
+            // ignore boxes on goals
+            if (map[row][col].equals('.')) continue;
+
+            int rows = map.length;
+            int cols = map[0].length;
+            vicinity = new Character[8];
+            vicinity[0] = (row > 0) ? map[row - 1][col] : null;
+            vicinity[1] = (row > 0) ? getItem(row - 1, col) : null;
+            vicinity[2] = (row < rows - 1) ? map[row + 1][col] : null;
+            vicinity[3] = (row < rows - 1) ? getItem(row + 1, col) : null;
+            vicinity[4] = (col > 0) ? map[row][col - 1] : null;
+            vicinity[5] = (col > 0) ? getItem(row, col - 1) : null;
+            vicinity[6] = (col < cols - 1) ? map[row][col + 1] : null;
+            vicinity[7] = (col < cols - 1) ? getItem(row, col + 1) : null;
+
+            if ((isWallOrBox(vicinity[0]) && isWallOrBox(vicinity[2])) &&
+                    (isWallOrBox(vicinity[4]) && isWallOrBox(vicinity[6]))) {
+                return true;
+            }
+        }
+        return false;
+    }
+    private boolean isWallOrBox(Character c) {
+        return c != null && (c.equals('#') || c.equals('$'));
+    }
 	public boolean isSolution(Character[][] map, Integer expectedBoxes) {
 		int counter = 0;
 		if (map != null)

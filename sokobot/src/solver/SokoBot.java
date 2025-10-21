@@ -324,10 +324,10 @@ public class SokoBot {
 						// - same MoveSet except the identified push direction appended to ArrayList<Character>
 						// - Manhattan distance between the box of the new state and the goal tile in the mapData
 						//   (this is computed on a separate method)
-						return new Object[] {
-                            gnew.isAnyBoxCornered(mapData) ? gnew : null,
-							new Moveset(newBoxPos, newPos, move_sequence.toString())
-						};
+                        return new Object[] {
+                                gnew.isAnyBoxCornered(mapData) ? null : gnew,
+                                new Moveset(newBoxPos, newPos, move_sequence.toString())
+                        };
 					}
 					else
 						// Error handling in case of a mistake somewhere else
