@@ -113,43 +113,93 @@ public class SokoBot {
             return 1;
         }
 
+        // java
         @Override
         public ArrayList<Moveset> Actions(GameState state) {
-            ArrayList <Moveset> possibleMoves = new ArrayList<>();
-            int[] rowInnerVicinity = {-1, 1, 0, 0};
-            int[] colInnerVicinity = {0, 0, -1, 1};
-            int[] rowOppositeVicinity = {1, -1, 0, 0};
-            int[] colOppositeVicinity = {0, 0, 1, -1};
-            BFS_Solver bfs_solver;
-            Position originalplayerPos = state.getPlayerPos();
+            ArrayList<Moveset> possibleMoves = new ArrayList<>();
+            int height = mapData.length;
+            int width = mapData[0].length;
+            int[] dr = {-1, 1, 0, 0};
+            int[] dc = {0, 0, -1, 1};
 
-            for (Map.Entry<Position, Character> entry : state.getItemsPos().entrySet()) {
-                if (entry.getValue().equals('$')) {
-                    for (int i = 0; i < 4; i++) {
-                        Position boxPos = new Position(entry.getKey().getRow(), entry.getKey().getCol());
-                        Position playerPos = new Position(entry.getKey().getRow() + rowInnerVicinity[i], entry.getKey().getCol() + colInnerVicinity[i]);
-                        Position targetPushingPos = new Position(entry.getKey().getRow() + rowOppositeVicinity[i],
-                                entry.getKey().getCol() + colOppositeVicinity[i]);
-                        // Check if the player position is not a wall and not occupied by another box
-                        // Also check if the target pushing position is not a wall and not occupied by another box
-                        if (!mapData[playerPos.getRow()][playerPos.getCol()].equals('#') && !state.getItemsPos().getOrDefault(playerPos, ' ').equals('$') &&
-                                !mapData[targetPushingPos.getRow()][targetPushingPos.getCol()].equals('#') && !state.getItemsPos().getOrDefault(targetPushingPos, ' ').equals('$')) {
-                            // Check if the player can reach the position to push the box
-                            bfs_solver = new BFS_Solver(mapData, state.getItemsPos());
-                            String path = bfs_solver.solve(originalplayerPos, playerPos);
-                            if (path != null) {
-                                // Create a new Moveset for this action and add it to the list
-                                possibleMoves.add(new Moveset(boxPos, playerPos, path));
-                            }
-                        }
+            // Box position in 2D array for quick lookup
+            boolean[][] isBoxInPos = new boolean[height][width];
+            for (Map.Entry<Position, Character> e : state.getItemsPos().entrySet()) {
+                if (e.getValue().equals('$')) {
+                    Position p = e.getKey();
+                    isBoxInPos[p.getRow()][p.getCol()] = true;
+                }
+            }
+
+            // BFS to find all reachable positions for the player
+            Position start = state.getPlayerPos();
+            boolean[][] reachablePos = new boolean[height][width];
+            Position[][] parentPos = new Position[height][width];
+            ArrayDeque<Position> queue = new ArrayDeque<>();
+            queue.add(start);
+            reachablePos[start.getRow()][start.getCol()] = true;
+            parentPos[start.getRow()][start.getCol()] = null;
+
+            while (!queue.isEmpty()) {
+                Position curr = queue.poll();
+                int r = curr.getRow(), c = curr.getCol();
+                for (int i = 0; i < 4; i++) {
+                    int newRow = r + dr[i], newCol = c + dc[i];
+                    if (newRow < 0 || newRow >= height || newCol < 0 || newCol >= width) continue;
+                    if (!reachablePos[newRow][newCol] && !mapData[newRow][newCol].equals('#') && !isBoxInPos[newRow][newCol]) {
+                        reachablePos[newRow][newCol] = true;
+                        parentPos[newRow][newCol] = curr;
+                        queue.add(new Position(newRow, newCol));
                     }
                 }
+            }
 
+            // For each box, check pushes: ensure indices are in bounds before accessing arrays
+            for (Map.Entry<Position, Character> e : state.getItemsPos().entrySet()) {
+                if (!e.getValue().equals('$')) continue;
+                Position box = e.getKey();
+                for (int i = 0; i < 4; i++) {
+                    int playerRow = box.getRow() - dr[i];
+                    int playerCol = box.getCol() - dc[i];
+                    int targetRow = box.getRow() + dr[i];
+                    int targetCol = box.getCol() + dc[i];
+
+                    // bounds checks
+                    if (playerRow < 0 || playerRow >= height || playerCol < 0 || playerCol >= width) continue;
+                    if (targetRow < 0 || targetRow >= height || targetCol < 0 || targetCol >= width) continue;
+
+                    // target must be free and not a wall/box
+                    if (reachablePos[playerRow][playerCol] &&  !isBoxInPos[targetRow][targetCol] && !mapData[targetRow][targetCol].equals('#')) {
+                        // reconstruct path from start -> (playerRow,playerCol)
+                        StringBuilder sb = new StringBuilder();
+                        Position current = new Position(playerRow, playerCol);
+                        Position player = parentPos[current.getRow()][current.getCol()];
+                        // walk back using parent pointers, append moves from parent -> cur
+                        while (player != null) {
+                            player = parentPos[current.getRow()][current.getCol()];
+                            if (player == null) break;
+                            int drc = current.getRow() - player.getRow();
+                            int dcc = current.getCol() - player.getCol();
+                            char move;
+                            if (drc == -1 && dcc == 0) move = 'u';
+                            else if (drc == 1 && dcc == 0) move = 'd';
+                            else if (drc == 0 && dcc == -1) move = 'l';
+                            else if (drc == 0 && dcc == 1) move = 'r';
+                            else throw new RuntimeException("Invalid parent linkage in BFS");
+                            sb.append(move);
+                            current = player;
+                        }
+                        sb.reverse(); // now path is start -> playerPos
+                        possibleMoves.add(new Moveset(new Position(box.getRow(), box.getCol()),
+                                new Position(playerRow, playerCol),
+                                sb.toString()));
+                    }
+                }
             }
             return possibleMoves;
         }
-		
-		// Return value contains:
+
+		// Return value contains:a
 		// - new GameState, or null if the succeeding state is deadlocked
 		// - same MoveSet except the identified push direction appended to ArrayList<Character>
 		// - Manhattan distance between the box of the new state and the goal tile in the mapData
