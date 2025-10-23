@@ -50,111 +50,6 @@ public class SokoBot {
 			this.initialStateItemsData = new GameState(hashCode(), items, goalTiles);
 		}
 		
-		/*
-		    * toString method that implements the A* search algorithm to find the solution
-		    * returns the solution as a string of moves
-		
-		@Override
-		public String toString()
-		{
-			// Declarations
-			HashSet<GameState> explored = new HashSet<>();
-			ArrayList<Node> frontier = new ArrayList<>();
-			StringBuilder outcome = new StringBuilder();
-			Node solution_tree = new Node(initialStateItemsData, null, null, 0);
-			Node minimum = solution_tree;
-			GameState current = initialStateItemsData;
-			ArrayList<Moveset> actions = null;
-			Object[] next = null;
-			Node i = null;
-			// Traverse until solution is found or frontier is empty
-			do {
-				// Add current game state to explored states
-				explored.add(current);
-				// Find all possible actions on the current state
-				actions = Actions(current);
-				for (Moveset m : actions) {
-					// For each possible action, find the succeeding state
-					next = Succ(current, m);
-					// If the next state is both not deadlocked and not explored,
-					// then add the state to the frontier as a new Node
-					//System.out.println((GameState)next[0] != null);
-					//System.out.println(!explored.contains((GameState)next[0]));
-					if ((GameState)next[0] != null && !explored.contains((GameState)next[0]))
-						frontier.add(new Node((GameState)next[0], (Moveset)next[1], minimum, (Integer)next[2]));
-				}
-				if (!frontier.isEmpty()) {
-					// Assuming the frontier is not empty, find the Node with the least f(n)
-					minimum = Collections.min(frontier, Comparator.comparingInt(Node::getFScore));
-					// Assign the state of the minimum to current so that it will be added to
-					// the explored list when the loop repeats
-					current = minimum.getState();
-					// Remove that Node from the frontier
-					frontier.remove(minimum);
-				}
-			} while (!(isEnd(current) || frontier.isEmpty()));
-			// Concatenate the move sequences found in the connected nodes
-			// from the leaf to the parent
-			i = minimum;
-			while (i != null) {
-				if (i.getMoveset() != null)
-					outcome.append(new StringBuilder(i.getMoveset().getMoveSequence())
-						.reverse().toString());
-				i = i.getParent();
-			}
-			System.out.println(outcome.reverse().toString());
-			return outcome.reverse().toString();
-		}
-		*/
-		
-		/*
-		@Override
-		public String toString() {
-			StringBuilder outcome = new StringBuilder();
-			PriorityQueue<Node> frontier = new PriorityQueue<>(Comparator.comparing(Node::getFScore));
-			HashSet<GameState> explored = new HashSet<>();
-			Node solution_tree = new Node(initialStateItemsData, null, null, goalTiles);
-			Node current = solution_tree;
-			Node next;
-			GameState current_state;
-			Object[] next_state;
-			ArrayList<Moveset> actions;
-			Node i;
-			frontier.add(current);
-			while (!frontier.isEmpty()) {
-				current = frontier.poll();
-				current_state = current.getState();
-				explored.add(current_state);
-				if (isEnd(current_state)) {
-					break;
-				} else {
-					actions = Actions(current_state);
-					for (Moveset m : actions) {
-						next_state = Succ(current_state, m);
-						System.out.println((GameState)next_state[0] != null);
-						System.out.println(!explored.contains((GameState)next_state[0]));
-						if ((GameState)next_state[0] != null && !explored.contains((GameState)next_state[0])) {
-							next = new Node((GameState)next_state[0], (Moveset)next_state[1], current, goalTiles);
-							if (current_state.equals(initialStateItemsData) || next.getFScore() < current.getFScore())
-								frontier.add(next);
-						}
-					}
-				}
-			}
-			// Concatenate the move sequences found in the connected nodes
-			// from the leaf to the parent
-			i = current;
-			while (i != null) {
-				if (i.getMoveset() != null) {
-					outcome.append(new StringBuilder(i.getMoveset().getMoveSequence())
-						.reverse().toString());
-				}
-				i = i.getParent();
-			}
-			return outcome.toString();
-		}
-		*/
-		
 		@Override
 		public String toString() {
 			return compute();
@@ -163,6 +58,7 @@ public class SokoBot {
 		private String compute() {
 			StringBuilder result = new StringBuilder();
 			Node leaf = search();
+			System.out.println("Constructing path...");
 			Node i;
 			if (leaf != null) {
 				i = leaf;
@@ -171,6 +67,7 @@ public class SokoBot {
 					i = i.getParent();
 				}
 			}
+			System.out.println(result);
 			return result.toString();
 		}
 		
@@ -322,11 +219,9 @@ public class SokoBot {
 						// Return value contains:
 						// - new GameState
 						// - same MoveSet except the identified push direction appended to ArrayList<Character>
-						// - Manhattan distance between the box of the new state and the goal tile in the mapData
-						//   (this is computed on a separate method)
                         return new Object[] {
-                                gnew.isAnyBoxCornered(mapData) ? null : gnew,
-                                new Moveset(newBoxPos, newPos, move_sequence.toString())
+							gnew.isAnyBoxCornered(mapData) ? null : gnew,
+							new Moveset(newBoxPos, newPos, move_sequence.toString())
                         };
 					}
 					else
@@ -345,7 +240,7 @@ public class SokoBot {
 		}
 		
         // may need to be a local variable of the getSolutionAStar method alongside the frontier priority queue
-		private ArrayList<Position> goalTiles = new ArrayList<>();
+		private HashSet<Position> goalTiles = new HashSet<>();
 		private Character[][] mapData;
 		private GameState initialStateItemsData;
 	}

@@ -3,6 +3,7 @@ package solver;
 import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 
@@ -13,7 +14,8 @@ import java.util.Objects;
  */
 public class GameState {
     private final Map<Position, Character> itemsMap = new HashMap<>();
-	private ArrayList<Position> goalTiles;
+	private HashSet<Position> goalTiles;
+	private Position playerPos = null;
 	private int sequenceHash;
 	private String stringForm;
 
@@ -24,14 +26,27 @@ public class GameState {
 	}
 
 	/* Constructor to convert given char[][] to a state */
-	public GameState(int sequenceHash, Character[][] items, ArrayList<Position> goalTiles) {
+	public GameState(int sequenceHash, Character[][] items, HashSet<Position> goalTiles) {
 		this.goalTiles = goalTiles;
 		this.sequenceHash = sequenceHash;
+		/*
 		for (int i = 0; i < items.length; i++)
 			for(int j = 0; j < items[i].length; j++)
 				// Add to itemsMap when the object is a box or a player
 				if (items[i][j].equals('$') || items[i][j].equals('@'))
 					setItem(i, j, items[i][j]);
+		*/
+		
+		for (int i = 0; i < items.length; i++) {
+			for (int j = 0; j < items[i].length; j++) {
+				if (items[i][j].equals('$') || items[i][j].equals('@')) {
+					setItem(i, j, items[i][j]);
+					if (items[i][j].equals('@'))
+						this.playerPos = new Position(i, j);
+				}
+			}
+		}
+		
 		if (getPlayerPos() == null)
 			throw new NullPointerException("No player found on the given item data");
 		// Always update string form when altering the contents of the state
@@ -86,6 +101,8 @@ public class GameState {
 	
     public void setItem(int row, int col, Character item) {
         Position pos = new Position (row, col);
+		if (item.equals('@'))
+			playerPos = pos;
         if (item.equals(' ')) {
             itemsMap.remove(pos);// Remove the entry if the item is a space
         }
@@ -144,10 +161,14 @@ public class GameState {
 	}
 	
 	public Position getPlayerPos() {
+		/*
 		for (Map.Entry<Position, Character> entry : itemsMap.entrySet())
 			if (entry.getValue().equals('@'))
 				return entry.getKey();
+		
 		return null; // pag ichcheck ng constructor this is convenient
+		*/
+		return playerPos;
 	}
 	
 	public Object[] getPlayerVicinityData() {
@@ -215,7 +236,8 @@ public class GameState {
 		if (this == obj)
 			return true;
 		return obj instanceof GameState &&
-			Objects.equals(stringForm, obj.toString());
+			//Objects.equals(stringForm, obj.toString());
+			this.hashCode() == obj.hashCode();
 	}
 
 	@Override
