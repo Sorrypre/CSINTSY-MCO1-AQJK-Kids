@@ -75,19 +75,26 @@ public class SokoBot {
 			PriorityQueue<Node> frontier = new PriorityQueue<>(Comparator.comparingInt(Node::getFScore));
 			HashSet<GameState> explored = new HashSet<>();
 			Node current = new Node(initialStateItemsData, null, null);
+			GameState current_state;
 			ArrayList<Moveset> actions;
 			Object[] succ;
 			frontier.add(current);
 			while (!frontier.isEmpty()) {
 				current = frontier.poll();
-				if (isEnd(current.getState()))
+				current_state = current.getState();
+				if (isEnd(current_state))
 					break;
-				explored.add(current.getState());
-				actions = Actions(current.getState());
+				explored.add(current_state);
+				actions = Actions(current_state);
 				for (Moveset m : actions) {
-					succ = Succ((GameState)current.getState(), m);
-					if ((GameState)succ[0] != null && !explored.contains((GameState)succ[0]))
-						frontier.add(new Node((GameState)succ[0], (Moveset)succ[1], current));
+					succ = Succ(current_state, m);
+					if (!explored.contains((GameState)succ[0])) {
+						if (!((GameState)succ[0]).isAnyBoxCornered(mapData))
+							frontier.add(new Node((GameState)succ[0], (Moveset)succ[1], current));
+						explored.add((GameState)succ[0]);
+					}
+					//if ((GameState)succ[0] != null && !explored.contains((GameState)succ[0]))
+					//	frontier.add(new Node((GameState)succ[0], (Moveset)succ[1], current));
 				}
 			}
 			return current;
@@ -198,7 +205,7 @@ public class SokoBot {
             }
             return possibleMoves;
         }
-
+		
 		// Return value contains:a
 		// - new GameState, or null if the succeeding state is deadlocked
 		// - same MoveSet except the identified push direction appended to ArrayList<Character>
@@ -270,7 +277,7 @@ public class SokoBot {
 						// - new GameState
 						// - same MoveSet except the identified push direction appended to ArrayList<Character>
                         return new Object[] {
-							gnew.isAnyBoxCornered(mapData) ? null : gnew,
+							gnew,
 							new Moveset(newBoxPos, newPos, move_sequence.toString())
                         };
 					}
