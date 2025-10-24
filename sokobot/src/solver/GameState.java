@@ -14,6 +14,7 @@ import java.util.Objects;
  */
 public class GameState {
     private final Map<Position, Character> itemsMap = new HashMap<>();
+	private Character[][] items;
 	private HashSet<Position> goalTiles;
 	private Position playerPos = null;
 	private int sequenceHash;
@@ -37,6 +38,7 @@ public class GameState {
 					setItem(i, j, items[i][j]);
 		*/
 		
+		this.items = items;
 		for (int i = 0; i < items.length; i++) {
 			for (int j = 0; j < items[i].length; j++) {
 				if (items[i][j].equals('$') || items[i][j].equals('@')) {
@@ -67,6 +69,10 @@ public class GameState {
 
 	public HashMap<Position, Character> getItemsPos() {
 		return (HashMap<Position, Character>) itemsMap;
+	}
+	
+	public Character[][] getRawItemsPos() {
+		return items;
 	}
 	
     public Character getItem(int row, int col) {

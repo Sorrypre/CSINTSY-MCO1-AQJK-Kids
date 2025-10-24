@@ -46,8 +46,8 @@ public class SokoBot {
 			for (int i = 0; i < height; i++)
 				for (int j = 0; j < width; j++)
 					items[i][j] = itemsData[i][j];
-			
-			this.initialStateItemsData = new GameState(hashCode(), items, goalTiles);
+			this.itemsData = items;
+			this.initialStateItemsData = new GameState(hashCode(), this.itemsData, goalTiles);
 		}
 		
 		@Override
@@ -85,9 +85,11 @@ public class SokoBot {
 				if (isEnd(current_state))
 					break;
 				explored.add(current_state);
-				actions = Actions(current_state);
+				actions = Actions2(current_state);
 				for (Moveset m : actions) {
+					System.out.print("check [" + m.getMoveSequence() + "]\n");
 					succ = Succ(current_state, m);
+					System.out.print("OK\n");
 					if (!explored.contains((GameState)succ[0])) {
 						if (!((GameState)succ[0]).isAnyBoxCornered(mapData))
 							frontier.add(new Node((GameState)succ[0], (Moveset)succ[1], current));
@@ -100,8 +102,168 @@ public class SokoBot {
 			return current;
 		}
 		
-		private SokoBotSequence() {}
-
+		public ArrayList<Moveset> Actions2(GameState state) {
+			int[] delta_irow = new int[] { -1, 1, 0, 0 };
+			int[] delta_icol = new int[] { 0, 0, -1, 1 };
+			int[] delta_orow = new int[] { -2, 2, 0, 0 };
+			int[] delta_ocol = new int[] { 0, 0, -2, 2 };
+			ArrayList<Moveset> move_list = new ArrayList<>();
+			Character[][] raw_items_data = state.getRawItemsPos();
+			Position player_pos = state.getPlayerPos();
+			Position box_pos, inner_pos;
+			int box_row, box_col;
+			int inner_row, inner_col;
+			String path;
+			for (Map.Entry<Position, Character> entry : state.getItemsPos().entrySet()) {
+				if (entry.getValue().equals('$')) {
+					box_pos = entry.getKey();
+					box_row = box_pos.getRow();
+					box_col = box_pos.getCol();
+					for (int i = 0; i < 4; i++) {
+						inner_row = box_row + delta_irow[i];
+						inner_col = box_col + delta_icol[i];
+						inner_pos = new Position(inner_row, inner_col);
+						if (!raw_items_data[inner_row][inner_col].equals('$') || mapData[inner_row][inner_col].equals(' ')) {
+							path = new Pathfinder(mapData, raw_items_data, player_pos, inner_pos).toString();
+							if (path != null)
+								move_list.add(new Moveset(box_pos, inner_pos, path));
+							System.out.print(" OK\n");
+						}
+					}
+				}
+			}
+			return move_list;
+		}
+		
+		private class Pathfinder {
+			public Pathfinder(Character[][] map, Character[][] items, Position player_pos, Position destination_pos) {
+				this.map = map;
+				this.items = items;
+				this.player_pos = player_pos;
+				this.destination_pos = destination_pos;
+				map_rows = map.length;
+				map_cols = map[0].length;
+				if (items[destination_pos.getRow()][destination_pos.getCol()].equals('$') &&
+					!map[destination_pos.getRow()][destination_pos.getCol()].equals(' '))
+					throw new RuntimeException("Pathfinder: destination_pos is not vacant");
+				if (!items[player_pos.getRow()][player_pos.getCol()].equals('@'))
+					throw new RuntimeException("Pathfinder: player_pos is not a player because it contains " + items[player_pos.getRow()][player_pos.getCol()]);
+				traced = trace_path();
+			}
+			@Override
+			public String toString() {
+				System.out.print("found sequence [" + traced + "]");
+				return traced;
+			}
+			private String trace_path() {
+				PriorityQueue<Node> frontier = new PriorityQueue<>(Comparator.comparingInt(node -> node.heuristic_value));
+				HashSet<Position> explored_positions = new HashSet<>();
+				Node current = new Node(player_pos, null, manhattan(player_pos, destination_pos));
+				Position next_inner, next_outer;
+				int next_inner_row, next_inner_col, next_outer_row, next_outer_col;
+				int new_heuristic;
+				frontier.add(current);
+				while (!frontier.isEmpty()) {
+					current = frontier.poll();
+					if (isDestination(current.player_pos))
+						return get_path(current);
+					explored_positions.add(current.player_pos);
+					// Add to frontier for every walkable direction (4)
+					for (int i = 0; i < 4; i++) {
+						next_inner_row = current.player_pos.getRow() + delta_irow[i];
+						next_inner_col = current.player_pos.getCol() + delta_icol[i];
+						next_outer_row = current.player_pos.getRow() + delta_orow[i];
+						next_outer_col = current.player_pos.getCol() + delta_ocol[i];
+						next_inner = new Position(next_inner_row, next_inner_col);
+						next_outer = new Position(next_outer_row, next_outer_col);
+						// Invalid checks merged by OR gate, in order for best optimization:
+						// - player inner vicinity is not bounded, which follows the outer vicinity is also not bounded
+						// - position is already explored
+						// - player inner vicinity is a wall
+						// - player inner vicinity is a box and the outer vicinity is bounded but is a wall or another box
+						if (!isBounded(next_inner))
+							continue;
+						if (explored_positions.contains(next_inner))
+							continue;
+						if (map[next_inner_row][next_inner_col].equals('#') || items[next_inner_row][next_inner_col].equals('$') || (items[next_inner_row][next_inner_col].equals('$') &&
+							(isBounded(next_outer) && (items[next_outer_row][next_outer_col].equals('$') ||	map[next_outer_row][next_outer_col].equals('#')))))
+							continue;
+						new_heuristic = manhattan(next_inner, destination_pos);
+						frontier.add(new Node(next_inner, current, new_heuristic));
+					}
+				}
+				return null;
+			}
+			private class Node {
+				public Node(Position player_pos, Node previous, int heuristic_value) {
+					this.player_pos = player_pos;
+					this.previous = previous;
+					this.heuristic_value = heuristic_value;
+					config = new StringBuilder()
+						.append(previous != null ? previous.hash : new Random().nextInt()).append('|')
+						.append(player_pos.getRow()).append(',').append(player_pos.getCol()).append('|')
+						.append(heuristic_value).toString();
+					hash = Objects.hashCode(config);
+				}
+				public final Position player_pos;
+				public final Node previous;
+				public final int heuristic_value;
+				public final int hash;
+				private final String config;
+			}
+			private String get_path(Node current) {
+				// Calculate path
+				StringBuilder path = new StringBuilder();
+				Stack<Position> move_sequence = new Stack<>();
+				Node i = current;
+				Position last_pos, top_pos;
+				int diff_row, diff_col;
+				while (i != null) {
+					move_sequence.push(i.player_pos);
+					i = i.previous;
+				}
+				top_pos = move_sequence.pop();
+				if (!move_sequence.empty()) {
+					do {
+						last_pos = top_pos;
+						top_pos = move_sequence.pop();
+						diff_row = top_pos.getRow() - last_pos.getRow();
+						diff_col = top_pos.getCol() - last_pos.getCol();
+						if (-1 == diff_row && 0 == diff_col)
+							path.append('u');
+						else if (1 == diff_row && 0 == diff_col)
+							path.append('d');
+						else if (0 == diff_row && -1 == diff_col)
+							path.append('l');
+						else if (0 == diff_row && 1 == diff_col)
+							path.append('r');
+						else
+							throw new RuntimeException("Pathfinder: path sequence is broken");
+					} while (!move_sequence.empty());
+				}
+				return path.toString();
+			}
+			private boolean isDestination(Position p) {
+				return manhattan(p, destination_pos) == 0;
+			}
+			private boolean isBounded(Position p) {
+				return map_rows - 1 >= p.getRow() && map_cols - 1 >= p.getCol();
+			}
+			private int manhattan(Position a, Position b) {
+				return Math.abs(a.getRow() - b.getRow()) + Math.abs(a.getCol() - b.getCol());
+			}
+			public final String traced;
+			private int map_rows, map_cols;
+			private Character[][] map;
+			private Character[][] items;
+			private Position player_pos;
+			private Position destination_pos;
+			private int[] delta_irow = new int[] { -1, 1, 0, 0 };
+			private int[] delta_icol = new int[] { 0, 0, -1, 1 };
+			private int[] delta_orow = new int[] { -2, 2, 0, 0 };
+			private int[] delta_ocol = new int[] { 0, 0, -2, 2 };
+		}
+		
         private GameState isDeadlock(GameState state) {
             return state.isAnyBoxCornered(mapData) ? state : null;
         }
@@ -283,7 +445,8 @@ public class SokoBot {
 					}
 					else
 						// Error handling in case of a mistake somewhere else
-						throw new RuntimeException("Succ(g,m) on state#" + g.hashCode() + ": no boxes found on desired direction");
+						// throw new RuntimeException("Succ(g,m) on state#" + g.hashCode() + ": no boxes found on desired direction");
+						return new Object[] { g, m };
 				}
 				else
 					// Error handling in case of a mistake somewhere else
@@ -299,6 +462,7 @@ public class SokoBot {
         // may need to be a local variable of the getSolutionAStar method alongside the frontier priority queue
 		private HashSet<Position> goalTiles = new HashSet<>();
 		private Character[][] mapData;
+		private Character[][] itemsData;
 		private GameState initialStateItemsData;
 	}
 }
